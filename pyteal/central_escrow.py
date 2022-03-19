@@ -4,7 +4,7 @@ from pyteal import *
 
 tmpl_central_app_id = Tmpl.Int("TMPL_CENTRAL_APP_ID")
 tmpl_funds_asset_id = Tmpl.Int("TMPL_FUNDS_ASSET_ID")
-tmpl_dao_creator = Tmpl.Addr("TMPL_DAO_CREATOR")
+tmpl_withdrawer = Tmpl.Addr("TMPL_WITHDRAWER")
 
 GLOBAL_RECEIVED_TOTAL = "ReceivedTotal"
 LOCAL_CLAIMED_TOTAL = "ClaimedTotal"
@@ -51,14 +51,14 @@ def program():
     handle_withdrawal = Seq(
         # pay fee tx
         Assert(Gtxn[0].type_enum() == TxnType.Payment),
-        Assert(Gtxn[0].sender() == tmpl_dao_creator),
+        Assert(Gtxn[0].sender() == tmpl_withdrawer),
         Assert(Gtxn[0].amount() == Int(0)),
 
-        # xfer from funds to the creator 
+        # xfer from funds to the withdrawer 
         Assert(Gtxn[1].type_enum() == TxnType.AssetTransfer),
         Assert(Gtxn[1].asset_amount() > Int(0)),
         Assert(Gtxn[1].xfer_asset() == tmpl_funds_asset_id),
-        Assert(Gtxn[1].asset_receiver() == tmpl_dao_creator),
+        Assert(Gtxn[1].asset_receiver() == tmpl_withdrawer),
         Assert(Gtxn[1].fee() == Int(0)),
         Assert(Gtxn[1].asset_close_to() == Global.zero_address()),
         Assert(Gtxn[1].rekey_to() == Global.zero_address()),
