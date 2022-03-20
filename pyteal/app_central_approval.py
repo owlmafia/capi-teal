@@ -10,6 +10,7 @@ tmpl_capi_share = Tmpl.Int("TMPL_CAPI_SHARE")
 tmpl_precision_square = Tmpl.Int("TMPL_PRECISION_SQUARE")
 tmpl_investors_share = Tmpl.Int("TMPL_INVESTORS_SHARE")
 tmpl_share_supply = Tmpl.Int("TMPL_SHARE_SUPPLY")
+tmpl_owner = Tmpl.Addr("TMPL_OWNER")
 
 GLOBAL_RECEIVED_TOTAL = "CentralReceivedTotal"
 GLOBAL_CENTRAL_ESCROW_ADDRESS = "CentralEscrowAddress"
@@ -23,6 +24,15 @@ LOCAL_DAO_ID = "Dao"
 def approval_program():
     handle_create = Seq(
         Assert(Gtxn[0].type_enum() == TxnType.ApplicationCall), 
+        Approve()
+    )
+
+    handle_update = Seq(
+        Assert(Global.group_size() == Int(1)),
+
+        Assert(Gtxn[0].type_enum() == TxnType.ApplicationCall), 
+        Assert(Gtxn[0].sender() == tmpl_owner), 
+        
         Approve()
     )
 
@@ -299,6 +309,7 @@ def approval_program():
 
     program = Cond(
         [Gtxn[0].application_id() == Int(0), handle_create],
+        [Gtxn[0].on_completion() == Int(4), handle_update],
         [Global.group_size() == Int(1), handle_optin],
         [Global.group_size() == Int(10), handle_setup_dao],
         [Gtxn[0].application_args[0] == Bytes("unlock"), handle_unlock],

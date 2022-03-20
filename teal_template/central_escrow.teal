@@ -69,7 +69,7 @@ int pay
 ==
 assert
 gtxn 0 Sender
-addr TMPL_WITHDRAWER
+addr TMPL_OWNER
 ==
 assert
 gtxn 0 Amount
@@ -89,7 +89,7 @@ int TMPL_FUNDS_ASSET_ID
 ==
 assert
 gtxn 1 AssetReceiver
-addr TMPL_WITHDRAWER
+addr TMPL_OWNER
 ==
 assert
 gtxn 1 Fee
