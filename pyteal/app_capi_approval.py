@@ -12,6 +12,7 @@ tmpl_investors_share = Tmpl.Int("TMPL_INVESTORS_SHARE")
 tmpl_share_supply = Tmpl.Int("TMPL_SHARE_SUPPLY")
 tmpl_funds_asset_id = Tmpl.Int("TMPL_FUNDS_ASSET_ID")
 tmpl_capi_asset_id = Tmpl.Int("TMPL_CAPI_ASSET_ID")
+tmpl_owner = Tmpl.Addr("TMPL_CAPI_OWNER")
 
 GLOBAL_RECEIVED_TOTAL = "ReceivedTotal"
 LOCAL_CLAIMED_TOTAL = "ClaimedTotal"
@@ -20,6 +21,15 @@ LOCAL_SHARES = "Shares"
 def approval_program():
     handle_create = Seq(
         Assert(Gtxn[0].type_enum() == TxnType.ApplicationCall),
+        Approve()
+    )
+
+    handle_update = Seq(
+        Assert(Global.group_size() == Int(1)),
+
+        Assert(Gtxn[0].type_enum() == TxnType.ApplicationCall), 
+        Assert(Gtxn[0].sender() == tmpl_owner), 
+        
         Approve()
     )
 
@@ -165,6 +175,7 @@ def approval_program():
     
     program = Cond(
         [Gtxn[0].application_id() == Int(0), handle_create],
+        [Gtxn[0].on_completion() == Int(4), handle_update],
         [Global.group_size() == Int(1), handle_optin],
         [Gtxn[0].application_args[0] == Bytes("claim"), handle_claim],
         [Gtxn[0].application_args[0] == Bytes("lock"), handle_lock],

@@ -2,29 +2,33 @@
 gtxn 0 ApplicationID
 int 0
 ==
-bnz main_l12
+bnz main_l14
+gtxn 0 OnCompletion
+int 4
+==
+bnz main_l13
 global GroupSize
 int 1
 ==
-bnz main_l11
+bnz main_l12
 gtxna 0 ApplicationArgs 0
 byte "claim"
 ==
-bnz main_l10
+bnz main_l11
 gtxna 0 ApplicationArgs 0
 byte "lock"
 ==
-bnz main_l9
+bnz main_l10
 gtxna 0 ApplicationArgs 0
 byte "unlock"
 ==
-bnz main_l8
+bnz main_l9
 gtxna 0 ApplicationArgs 0
 byte "drain"
 ==
-bnz main_l7
+bnz main_l8
 err
-main_l7:
+main_l8:
 global GroupSize
 int 4
 ==
@@ -81,7 +85,7 @@ gtxn 3 AssetAmount
 app_global_put
 int 1
 return
-main_l8:
+main_l9:
 global GroupSize
 int 2
 ==
@@ -122,7 +126,7 @@ app_local_get
 assert
 int 1
 return
-main_l9:
+main_l10:
 global GroupSize
 int 2
 ==
@@ -184,7 +188,7 @@ app_local_get
 app_local_put
 int 1
 return
-main_l10:
+main_l11:
 gtxn 0 TypeEnum
 int appl
 ==
@@ -242,7 +246,7 @@ gtxn 1 AssetAmount
 app_local_put
 int 1
 return
-main_l11:
+main_l12:
 gtxn 0 TypeEnum
 int appl
 ==
@@ -257,7 +261,22 @@ int OptIn
 assert
 int 1
 return
-main_l12:
+main_l13:
+global GroupSize
+int 1
+==
+assert
+gtxn 0 TypeEnum
+int appl
+==
+assert
+gtxn 0 Sender
+addr TMPL_CAPI_OWNER
+==
+assert
+int 1
+return
+main_l14:
 gtxn 0 TypeEnum
 int appl
 ==
