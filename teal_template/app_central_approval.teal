@@ -2,41 +2,70 @@
 gtxn 0 ApplicationID
 int 0
 ==
-bnz main_l18
+bnz main_l20
 gtxn 0 OnCompletion
 int 4
 ==
-bnz main_l17
-global GroupSize
-int 1
-==
-bnz main_l16
+bnz main_l19
 global GroupSize
 int 10
 ==
-bnz main_l15
+bnz main_l18
+gtxna 0 ApplicationArgs 0
+byte "optin"
+==
+bnz main_l17
 gtxna 0 ApplicationArgs 0
 byte "unlock"
 ==
-bnz main_l14
+bnz main_l16
 gtxna 0 ApplicationArgs 0
 byte "claim"
 ==
-bnz main_l13
+bnz main_l15
 gtxna 0 ApplicationArgs 0
 byte "lock"
 ==
-bnz main_l12
+bnz main_l14
 gtxna 0 ApplicationArgs 0
 byte "drain"
 ==
-bnz main_l11
+bnz main_l13
 gtxna 0 ApplicationArgs 0
 byte "invest"
 ==
-bnz main_l10
+bnz main_l12
+gtxna 0 ApplicationArgs 0
+byte "update_data"
+==
+bnz main_l11
 err
-main_l10:
+main_l11:
+gtxn 0 TypeEnum
+int appl
+==
+assert
+gtxn 0 ApplicationID
+global CurrentApplicationID
+==
+assert
+gtxn 0 OnCompletion
+int NoOp
+==
+assert
+gtxn 0 NumAppArgs
+int 3
+==
+assert
+byte "CentralEscrowAddress"
+gtxna 0 ApplicationArgs 1
+app_global_put
+byte "CustomerEscrowAddress"
+gtxna 0 ApplicationArgs 2
+app_global_put
+int 1
+return
+main_l12:
 global GroupSize
 int 4
 ==
@@ -158,7 +187,7 @@ gtxna 0 ApplicationArgs 1
 app_local_put
 int 1
 return
-main_l11:
+main_l13:
 global GroupSize
 int 4
 ==
@@ -250,7 +279,7 @@ gtxn 2 AssetAmount
 app_global_put
 int 1
 return
-main_l12:
+main_l14:
 global GroupSize
 int 2
 ==
@@ -327,7 +356,7 @@ gtxna 0 ApplicationArgs 1
 app_local_put
 int 1
 return
-main_l13:
+main_l15:
 global GroupSize
 int 2
 ==
@@ -397,7 +426,7 @@ gtxn 1 AssetAmount
 app_local_put
 int 1
 return
-main_l14:
+main_l16:
 global GroupSize
 int 2
 ==
@@ -439,7 +468,22 @@ app_global_get
 assert
 int 1
 return
-main_l15:
+main_l17:
+gtxn 0 TypeEnum
+int appl
+==
+assert
+gtxn 0 ApplicationID
+global CurrentApplicationID
+==
+assert
+gtxn 0 OnCompletion
+int OptIn
+==
+assert
+int 1
+return
+main_l18:
 gtxn 0 TypeEnum
 int appl
 ==
@@ -540,22 +584,7 @@ btoi
 app_global_put
 int 1
 return
-main_l16:
-gtxn 0 TypeEnum
-int appl
-==
-assert
-gtxn 0 ApplicationID
-global CurrentApplicationID
-==
-assert
-gtxn 0 OnCompletion
-int OptIn
-==
-assert
-int 1
-return
-main_l17:
+main_l19:
 global GroupSize
 int 1
 ==
@@ -570,7 +599,7 @@ addr TMPL_OWNER
 assert
 int 1
 return
-main_l18:
+main_l20:
 gtxn 0 TypeEnum
 int appl
 ==

@@ -87,6 +87,21 @@ def approval_program():
         Approve()
     )
 
+    handle_update_data = Seq(
+        # app call
+        Assert(Gtxn[0].type_enum() == TxnType.ApplicationCall),
+        Assert(Gtxn[0].application_id() == Global.current_application_id()),
+        Assert(Gtxn[0].on_completion() == OnComplete.NoOp),
+        Assert(Gtxn[0].application_args.length() == Int(3)),
+
+        # update data
+        App.globalPut(Bytes(GLOBAL_CENTRAL_ESCROW_ADDRESS), Gtxn[0].application_args[1]),
+        App.globalPut(Bytes(GLOBAL_CUSTOMER_ESCROW_ADDRESS), Gtxn[0].application_args[2]),
+        # for now shares asset and funds assets not updatable - have to think about implications
+
+        Approve()
+    )
+
     handle_optin = Seq(
         Assert(Gtxn[0].type_enum() == TxnType.ApplicationCall),
         Assert(Gtxn[0].application_id() == Global.current_application_id()),
@@ -310,13 +325,14 @@ def approval_program():
     program = Cond(
         [Gtxn[0].application_id() == Int(0), handle_create],
         [Gtxn[0].on_completion() == Int(4), handle_update],
-        [Global.group_size() == Int(1), handle_optin],
         [Global.group_size() == Int(10), handle_setup_dao],
+        [Gtxn[0].application_args[0] == Bytes("optin"), handle_optin],
         [Gtxn[0].application_args[0] == Bytes("unlock"), handle_unlock],
         [Gtxn[0].application_args[0] == Bytes("claim"), handle_claim],
         [Gtxn[0].application_args[0] == Bytes("lock"), handle_lock],
         [Gtxn[0].application_args[0] == Bytes("drain"), handle_drain],
         [Gtxn[0].application_args[0] == Bytes("invest"), handle_invest],
+        [Gtxn[0].application_args[0] == Bytes("update_data"), handle_update_data],
     )
 
     return compileTeal(program, Mode.Application, version=5)
