@@ -22,8 +22,8 @@ GLOBAL_LOCKING_ESCROW_ADDRESS = "LockingEscrowAddress"
 GLOBAL_SHARES_ASSET_ID = "SharesAssetId"
 GLOBAL_FUNDS_ASSET_ID = "FundsAssetId"
 
-GLOBAL_PROJECT_NAME = "ProjectName"
-GLOBAL_PROJECT_DESC = "ProjectDesc"
+GLOBAL_DAO_NAME = "DaoName"
+GLOBAL_DAO_DESC = "DaoDesc"
 GLOBAL_SHARE_PRICE = "SharePrice"
 GLOBAL_INVESTORS_PART = "InvestorsPart"
 
@@ -104,8 +104,8 @@ def approval_program():
         App.globalPut(Bytes(GLOBAL_SHARES_ASSET_ID), Btoi(Gtxn[0].application_args[4])),
         App.globalPut(Bytes(GLOBAL_FUNDS_ASSET_ID), Btoi(Gtxn[0].application_args[5])),
 
-        App.globalPut(Bytes(GLOBAL_PROJECT_NAME), Gtxn[0].application_args[6]),
-        App.globalPut(Bytes(GLOBAL_PROJECT_DESC), Gtxn[0].application_args[7]),
+        App.globalPut(Bytes(GLOBAL_DAO_NAME), Gtxn[0].application_args[6]),
+        App.globalPut(Bytes(GLOBAL_DAO_DESC), Gtxn[0].application_args[7]),
         App.globalPut(Bytes(GLOBAL_SHARE_PRICE), Btoi(Gtxn[0].application_args[8])),
         App.globalPut(Bytes(GLOBAL_INVESTORS_PART), Btoi(Gtxn[0].application_args[9])),
 

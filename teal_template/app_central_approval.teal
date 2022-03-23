@@ -588,10 +588,10 @@ byte "FundsAssetId"
 gtxna 0 ApplicationArgs 5
 btoi
 app_global_put
-byte "ProjectName"
+byte "DaoName"
 gtxna 0 ApplicationArgs 6
 app_global_put
-byte "ProjectDesc"
+byte "DaoDesc"
 gtxna 0 ApplicationArgs 7
 app_global_put
 byte "SharePrice"
