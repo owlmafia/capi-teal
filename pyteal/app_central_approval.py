@@ -13,10 +13,26 @@ tmpl_share_supply = Tmpl.Int("TMPL_SHARE_SUPPLY")
 tmpl_owner = Tmpl.Addr("TMPL_OWNER")
 
 GLOBAL_RECEIVED_TOTAL = "CentralReceivedTotal"
+
 GLOBAL_CENTRAL_ESCROW_ADDRESS = "CentralEscrowAddress"
 GLOBAL_CUSTOMER_ESCROW_ADDRESS = "CustomerEscrowAddress"
+GLOBAL_INVESTING_ESCROW_ADDRESS = "InvestingEscrowAddress"
+GLOBAL_LOCKING_ESCROW_ADDRESS = "LockingEscrowAddress"
+
 GLOBAL_SHARES_ASSET_ID = "SharesAssetId"
 GLOBAL_FUNDS_ASSET_ID = "FundsAssetId"
+
+GLOBAL_PROJECT_NAME = "ProjectName"
+GLOBAL_PROJECT_DESC = "ProjectDesc"
+GLOBAL_SHARE_PRICE = "SharePrice"
+GLOBAL_INVESTORS_PART = "InvestorsPart"
+
+GLOBAL_LOGO_URL = "LogoUrl"
+GLOBAL_SOCIAL_MEDIA_URL = "SocialMediaUrl"
+
+# not sure this is needed
+GLOBAL_OWNER = "Owner"
+
 LOCAL_SHARES = "Shares"
 LOCAL_CLAIMED_TOTAL = "ClaimedTotal"
 LOCAL_DAO_ID = "Dao"
@@ -41,7 +57,7 @@ def approval_program():
         Assert(Gtxn[0].type_enum() == TxnType.ApplicationCall),
         Assert(Gtxn[0].application_id() == Global.current_application_id()),
         Assert(Gtxn[0].on_completion() == OnComplete.NoOp),
-        Assert(Gtxn[0].application_args.length() == Int(4)),
+        Assert(Gtxn[0].application_args.length() == Int(13)),
 
         # creator sends min balance to central escrow
         Assert(Gtxn[1].type_enum() == TxnType.Payment),
@@ -75,14 +91,28 @@ def approval_program():
 
         # creator transfers shares to investing escrow
         Assert(Gtxn[9].type_enum() == TxnType.AssetTransfer),
-        Assert(Gtxn[9].xfer_asset() == Btoi(Gtxn[0].application_args[2])),
+        Assert(Gtxn[9].xfer_asset() == Btoi(Gtxn[0].application_args[4])),
 
         # initialize state
         App.globalPut(Bytes(GLOBAL_RECEIVED_TOTAL), Int(0)),
+
         App.globalPut(Bytes(GLOBAL_CENTRAL_ESCROW_ADDRESS), Gtxn[0].application_args[0]),
         App.globalPut(Bytes(GLOBAL_CUSTOMER_ESCROW_ADDRESS), Gtxn[0].application_args[1]),
-        App.globalPut(Bytes(GLOBAL_SHARES_ASSET_ID), Btoi(Gtxn[0].application_args[2])),
-        App.globalPut(Bytes(GLOBAL_FUNDS_ASSET_ID), Btoi(Gtxn[0].application_args[3])),
+        App.globalPut(Bytes(GLOBAL_INVESTING_ESCROW_ADDRESS), Gtxn[0].application_args[2]),
+        App.globalPut(Bytes(GLOBAL_LOCKING_ESCROW_ADDRESS), Gtxn[0].application_args[3]),
+
+        App.globalPut(Bytes(GLOBAL_SHARES_ASSET_ID), Btoi(Gtxn[0].application_args[4])),
+        App.globalPut(Bytes(GLOBAL_FUNDS_ASSET_ID), Btoi(Gtxn[0].application_args[5])),
+
+        App.globalPut(Bytes(GLOBAL_PROJECT_NAME), Gtxn[0].application_args[6]),
+        App.globalPut(Bytes(GLOBAL_PROJECT_DESC), Gtxn[0].application_args[7]),
+        App.globalPut(Bytes(GLOBAL_SHARE_PRICE), Btoi(Gtxn[0].application_args[8])),
+        App.globalPut(Bytes(GLOBAL_INVESTORS_PART), Btoi(Gtxn[0].application_args[9])),
+
+        App.globalPut(Bytes(GLOBAL_LOGO_URL), Gtxn[0].application_args[10]),
+        App.globalPut(Bytes(GLOBAL_SOCIAL_MEDIA_URL), Gtxn[0].application_args[11]),
+        
+        App.globalPut(Bytes(GLOBAL_OWNER), Gtxn[0].application_args[12]),
 
         Approve()
     )

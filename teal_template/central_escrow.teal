@@ -120,7 +120,7 @@ int TMPL_CENTRAL_APP_ID
 ==
 assert
 gtxn 0 NumAppArgs
-int 4
+int 13
 ==
 assert
 gtxn 1 TypeEnum
@@ -196,7 +196,7 @@ int axfer
 ==
 assert
 gtxn 9 XferAsset
-gtxna 0 ApplicationArgs 2
+gtxna 0 ApplicationArgs 4
 btoi
 ==
 assert

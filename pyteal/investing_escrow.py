@@ -18,7 +18,7 @@ def program():
         Assert(Gtxn[0].type_enum() == TxnType.ApplicationCall),
         Assert(Gtxn[0].on_completion() == OnComplete.NoOp),
         Assert(Gtxn[0].application_id() == tmpl_central_app_id),
-        Assert(Gtxn[0].application_args.length() == Int(4)),
+        Assert(Gtxn[0].application_args.length() == Int(13)),
 
         Assert(Gtxn[1].type_enum() == TxnType.Payment),
         Assert(Gtxn[1].receiver() == Gtxn[0].application_args[0]),
@@ -47,7 +47,7 @@ def program():
         Assert(Gtxn[8].asset_amount() == Int(0)),
 
         Assert(Gtxn[9].type_enum() == TxnType.AssetTransfer),
-        Assert(Gtxn[9].xfer_asset() == Btoi(Gtxn[0].application_args[2])),
+        Assert(Gtxn[9].xfer_asset() == Btoi(Gtxn[0].application_args[4])),
 
         Approve()
     )

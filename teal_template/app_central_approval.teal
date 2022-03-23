@@ -497,7 +497,7 @@ int NoOp
 ==
 assert
 gtxn 0 NumAppArgs
-int 4
+int 13
 ==
 assert
 gtxn 1 TypeEnum
@@ -561,7 +561,7 @@ int axfer
 ==
 assert
 gtxn 9 XferAsset
-gtxna 0 ApplicationArgs 2
+gtxna 0 ApplicationArgs 4
 btoi
 ==
 assert
@@ -574,13 +574,42 @@ app_global_put
 byte "CustomerEscrowAddress"
 gtxna 0 ApplicationArgs 1
 app_global_put
-byte "SharesAssetId"
+byte "InvestingEscrowAddress"
 gtxna 0 ApplicationArgs 2
+app_global_put
+byte "LockingEscrowAddress"
+gtxna 0 ApplicationArgs 3
+app_global_put
+byte "SharesAssetId"
+gtxna 0 ApplicationArgs 4
 btoi
 app_global_put
 byte "FundsAssetId"
-gtxna 0 ApplicationArgs 3
+gtxna 0 ApplicationArgs 5
 btoi
+app_global_put
+byte "ProjectName"
+gtxna 0 ApplicationArgs 6
+app_global_put
+byte "ProjectDesc"
+gtxna 0 ApplicationArgs 7
+app_global_put
+byte "SharePrice"
+gtxna 0 ApplicationArgs 8
+btoi
+app_global_put
+byte "InvestorsPart"
+gtxna 0 ApplicationArgs 9
+btoi
+app_global_put
+byte "LogoUrl"
+gtxna 0 ApplicationArgs 10
+app_global_put
+byte "SocialMediaUrl"
+gtxna 0 ApplicationArgs 11
+app_global_put
+byte "Owner"
+gtxna 0 ApplicationArgs 12
 app_global_put
 int 1
 return
