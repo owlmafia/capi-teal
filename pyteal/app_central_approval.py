@@ -35,6 +35,7 @@ GLOBAL_OWNER = "Owner"
 
 LOCAL_SHARES = "Shares"
 LOCAL_CLAIMED_TOTAL = "ClaimedTotal"
+LOCAL_CLAIMED_INIT = "ClaimedInit"
 LOCAL_DAO_ID = "Dao"
 
 def approval_program():
@@ -218,7 +219,8 @@ def approval_program():
                 Gtxn[1].asset_amount()
             )
         ),
-        App.localPut( # initialize already claimed local state
+        # initialize already claimed local state
+        App.localPut(
             Gtxn[0].sender(), 
             Bytes(LOCAL_CLAIMED_TOTAL), 
             # NOTE that this sets claimedTotal to the entitled amount each time that the investor buys/locks shares
@@ -227,6 +229,12 @@ def approval_program():
             # see more notes in old repo
             claimable_dividend
             # Gtxn[1].asset_amount()
+        ),
+        # remember initial already claimed local state
+        App.localPut( 
+            Gtxn[0].sender(),
+            Bytes(LOCAL_CLAIMED_INIT), 
+            App.localGet(Gtxn[0].sender(), Bytes(LOCAL_CLAIMED_TOTAL))
         ),
     )
 

@@ -186,6 +186,12 @@ byte "ClaimedTotal"
 app_local_get
 -
 app_local_put
+gtxn 0 Sender
+byte "ClaimedInit"
+gtxn 0 Sender
+byte "ClaimedTotal"
+app_local_get
+app_local_put
 int 1
 return
 main_l11:

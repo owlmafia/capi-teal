@@ -182,6 +182,12 @@ app_local_get
 -
 app_local_put
 gtxn 0 Sender
+byte "ClaimedInit"
+gtxn 0 Sender
+byte "ClaimedTotal"
+app_local_get
+app_local_put
+gtxn 0 Sender
 byte "Dao"
 gtxna 0 ApplicationArgs 1
 app_local_put
@@ -349,6 +355,12 @@ gtxn 0 Sender
 byte "ClaimedTotal"
 app_local_get
 -
+app_local_put
+gtxn 0 Sender
+byte "ClaimedInit"
+gtxn 0 Sender
+byte "ClaimedTotal"
+app_local_get
 app_local_put
 gtxn 0 Sender
 byte "Dao"

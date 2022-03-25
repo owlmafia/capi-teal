@@ -16,6 +16,7 @@ tmpl_owner = Tmpl.Addr("TMPL_CAPI_OWNER")
 
 GLOBAL_RECEIVED_TOTAL = "ReceivedTotal"
 LOCAL_CLAIMED_TOTAL = "ClaimedTotal"
+LOCAL_CLAIMED_INIT = "ClaimedInit"
 LOCAL_SHARES = "Shares"
 
 def approval_program():
@@ -135,6 +136,13 @@ def approval_program():
             # see more notes in old repo
             entitled_dividend
             # Gtxn[1].asset_amount()
+        ),
+
+        # remember initial already claimed local state
+        App.localPut( 
+            Gtxn[0].sender(),
+            Bytes(LOCAL_CLAIMED_INIT), 
+            App.localGet(Gtxn[0].sender(), Bytes(LOCAL_CLAIMED_TOTAL))
         ),
 
         Approve()
