@@ -120,7 +120,7 @@ int TMPL_CENTRAL_APP_ID
 ==
 assert
 gtxn 0 NumAppArgs
-int 13
+int 14
 ==
 assert
 gtxn 1 TypeEnum

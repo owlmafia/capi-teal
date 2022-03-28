@@ -33,6 +33,8 @@ GLOBAL_SOCIAL_MEDIA_URL = "SocialMediaUrl"
 # not sure this is needed
 GLOBAL_OWNER = "Owner"
 
+GLOBAL_VERSIONS = "Versions"
+
 LOCAL_SHARES = "Shares"
 LOCAL_CLAIMED_TOTAL = "ClaimedTotal"
 LOCAL_CLAIMED_INIT = "ClaimedInit"
@@ -58,7 +60,7 @@ def approval_program():
         Assert(Gtxn[0].type_enum() == TxnType.ApplicationCall),
         Assert(Gtxn[0].application_id() == Global.current_application_id()),
         Assert(Gtxn[0].on_completion() == OnComplete.NoOp),
-        Assert(Gtxn[0].application_args.length() == Int(13)),
+        Assert(Gtxn[0].application_args.length() == Int(14)),
 
         # creator sends min balance to central escrow
         Assert(Gtxn[1].type_enum() == TxnType.Payment),
@@ -115,6 +117,8 @@ def approval_program():
         
         App.globalPut(Bytes(GLOBAL_OWNER), Gtxn[0].application_args[12]),
 
+        App.globalPut(Bytes(GLOBAL_VERSIONS), Gtxn[0].application_args[13]),
+
         Approve()
     )
 
@@ -123,7 +127,8 @@ def approval_program():
         Assert(Gtxn[0].type_enum() == TxnType.ApplicationCall),
         Assert(Gtxn[0].application_id() == Global.current_application_id()),
         Assert(Gtxn[0].on_completion() == OnComplete.NoOp),
-        Assert(Gtxn[0].application_args.length() == Int(11)),
+        Assert(Gtxn[0].application_args.length() == Int(12)),
+
 
         # update data
         App.globalPut(Bytes(GLOBAL_CENTRAL_ESCROW_ADDRESS), Gtxn[0].application_args[1]),
@@ -136,6 +141,8 @@ def approval_program():
         App.globalPut(Bytes(GLOBAL_LOGO_URL), Gtxn[0].application_args[8]),
         App.globalPut(Bytes(GLOBAL_SOCIAL_MEDIA_URL), Gtxn[0].application_args[9]),
         App.globalPut(Bytes(GLOBAL_OWNER), Gtxn[0].application_args[10]),
+        App.globalPut(Bytes(GLOBAL_VERSIONS), Gtxn[0].application_args[11]),
+
         # for now shares asset, funds asset and investor's part not updatable - have to think about implications
 
         Approve()
