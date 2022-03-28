@@ -202,7 +202,7 @@ def export(path, output):
     f.write(output)
     print("Wrote TEAL to: " + path)
 
-export("teal_template/app_capi_approval.teal", approval_program())
-export("teal/app_capi_clear.teal", clear_program())
+export("teal_template/capi_app_approval.teal", approval_program())
+export("teal_template/capi_app_clear.teal", clear_program())
 
 print("Done! Wrote capi approval and clear TEAL")

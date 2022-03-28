@@ -6,7 +6,7 @@ Involved assets:
 
 # DAO contracts
 
-## app_central_approval
+## dao_app_approval
 
 Contains the DAO's state. 
 
@@ -41,9 +41,9 @@ The investors lock shares here to be entitled to the dividend.
 
 # Capi contracts
 
-## app_capi_approval
+## capi_app_approval
 
-Analogous to app_central_approval but for $capi holders and the global dividend.
+Analogous to dao_app_approval but for $capi holders and the global dividend.
 
 ## capi_escrow
 

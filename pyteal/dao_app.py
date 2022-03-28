@@ -378,20 +378,13 @@ def approval_program():
 def clear_program():
     return compileTeal(Int(1), Mode.Application, version=5)
  
-path = 'teal_template/app_central_approval.teal'
-with open(path, 'w') as f:
-    output = approval_program()
-    # print(output)
-    f.write(output)
-    print("Done! output: " + path)
-
 def export(path, output):
    with open(path, "w") as f:
     # print(output)
     f.write(output)
     print("Wrote TEAL to: " + path)
 
-export("teal_template/app_central_approval.teal", approval_program())
-export("teal/app_central_clear.teal", clear_program())
+export("teal_template/dao_app_approval.teal", approval_program())
+export("teal_template/dao_app_clear.teal", clear_program())
 
-print("Done! Wrote central approval and clear TEAL")
+print("Done! Wrote dao approval and clear TEAL")
