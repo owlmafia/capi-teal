@@ -123,12 +123,20 @@ def approval_program():
         Assert(Gtxn[0].type_enum() == TxnType.ApplicationCall),
         Assert(Gtxn[0].application_id() == Global.current_application_id()),
         Assert(Gtxn[0].on_completion() == OnComplete.NoOp),
-        Assert(Gtxn[0].application_args.length() == Int(3)),
+        Assert(Gtxn[0].application_args.length() == Int(11)),
 
         # update data
         App.globalPut(Bytes(GLOBAL_CENTRAL_ESCROW_ADDRESS), Gtxn[0].application_args[1]),
         App.globalPut(Bytes(GLOBAL_CUSTOMER_ESCROW_ADDRESS), Gtxn[0].application_args[2]),
-        # for now shares asset and funds assets not updatable - have to think about implications
+        App.globalPut(Bytes(GLOBAL_INVESTING_ESCROW_ADDRESS), Gtxn[0].application_args[3]),
+        App.globalPut(Bytes(GLOBAL_LOCKING_ESCROW_ADDRESS), Gtxn[0].application_args[4]),
+        App.globalPut(Bytes(GLOBAL_DAO_NAME), Gtxn[0].application_args[5]),
+        App.globalPut(Bytes(GLOBAL_DAO_DESC), Gtxn[0].application_args[6]),
+        App.globalPut(Bytes(GLOBAL_SHARE_PRICE), Btoi(Gtxn[0].application_args[7])),
+        App.globalPut(Bytes(GLOBAL_LOGO_URL), Gtxn[0].application_args[8]),
+        App.globalPut(Bytes(GLOBAL_SOCIAL_MEDIA_URL), Gtxn[0].application_args[9]),
+        App.globalPut(Bytes(GLOBAL_OWNER), Gtxn[0].application_args[10]),
+        # for now shares asset, funds asset and investor's part not updatable - have to think about implications
 
         Approve()
     )

@@ -54,7 +54,7 @@ int NoOp
 ==
 assert
 gtxn 0 NumAppArgs
-int 3
+int 11
 ==
 assert
 byte "CentralEscrowAddress"
@@ -62,6 +62,31 @@ gtxna 0 ApplicationArgs 1
 app_global_put
 byte "CustomerEscrowAddress"
 gtxna 0 ApplicationArgs 2
+app_global_put
+byte "InvestingEscrowAddress"
+gtxna 0 ApplicationArgs 3
+app_global_put
+byte "LockingEscrowAddress"
+gtxna 0 ApplicationArgs 4
+app_global_put
+byte "DaoName"
+gtxna 0 ApplicationArgs 5
+app_global_put
+byte "DaoDesc"
+gtxna 0 ApplicationArgs 6
+app_global_put
+byte "SharePrice"
+gtxna 0 ApplicationArgs 7
+btoi
+app_global_put
+byte "LogoUrl"
+gtxna 0 ApplicationArgs 8
+app_global_put
+byte "SocialMediaUrl"
+gtxna 0 ApplicationArgs 9
+app_global_put
+byte "Owner"
+gtxna 0 ApplicationArgs 10
 app_global_put
 int 1
 return
