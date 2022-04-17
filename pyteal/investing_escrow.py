@@ -7,7 +7,7 @@ tmpl_central_app_id = Tmpl.Int("TMPL_CENTRAL_APP_ID")
 tmpl_funds_asset_id = Tmpl.Int("TMPL_FUNDS_ASSET_ID")
 tmpl_shares_asset_id = Tmpl.Int("TMPL_SHARES_ASSET_ID")
 tmpl_locking_escrow_address = Tmpl.Addr("TMPL_LOCKING_ESCROW_ADDRESS")
-tmpl_central_escrow_address = Tmpl.Addr("TMPL_CENTRAL_ESCROW_ADDRESS")
+tmpl_app_escrow_address = Tmpl.Addr("TMPL_APP_ESCROW_ADDRESS")
 
 GLOBAL_RECEIVED_TOTAL = "ReceivedTotal"
 LOCAL_CLAIMED_TOTAL = "ClaimedTotal"
@@ -15,39 +15,41 @@ LOCAL_SHARES = "Shares"
 
 def program():
     handle_setup_dao = Seq(
-        Assert(Gtxn[0].type_enum() == TxnType.ApplicationCall),
-        Assert(Gtxn[0].on_completion() == OnComplete.NoOp),
-        Assert(Gtxn[0].application_id() == tmpl_central_app_id),
-        Assert(Gtxn[0].application_args.length() == Int(14)),
+        # creator sends min balance to app address
+        Assert(Gtxn[0].type_enum() == TxnType.Payment),
+        Assert(Gtxn[0].receiver() == tmpl_app_escrow_address),
+        
+        # app call
+        Assert(Gtxn[1].type_enum() == TxnType.ApplicationCall),
+        Assert(Gtxn[1].application_id() == tmpl_central_app_id),
+        Assert(Gtxn[1].on_completion() == OnComplete.NoOp),
+        Assert(Gtxn[1].application_args.length() == Int(13)),
 
-        Assert(Gtxn[1].type_enum() == TxnType.Payment),
-        Assert(Gtxn[1].receiver() == Gtxn[0].application_args[0]),
-
+        # creator sends min balance to customer escrow
         Assert(Gtxn[2].type_enum() == TxnType.Payment),
-        Assert(Gtxn[2].receiver() == Gtxn[0].application_args[1]),
+        Assert(Gtxn[2].receiver() == Gtxn[1].application_args[0]),
 
+        # creator sends min balance to locking escrow
         Assert(Gtxn[3].type_enum() == TxnType.Payment),
 
+        # creator sends min balance to investing escrow
         Assert(Gtxn[4].type_enum() == TxnType.Payment),
 
-        Assert(Gtxn[5].type_enum() == TxnType.AssetTransfer), # optin locking escrow to shares
+        # locking escrow opt-ins to shares
+        Assert(Gtxn[5].type_enum() == TxnType.AssetTransfer),
         Assert(Gtxn[5].asset_amount() == Int(0)),
 
-        # investing escrow opts-in to shares
+        # investing escrow opt-ins to shares
         Assert(Gtxn[6].type_enum() == TxnType.AssetTransfer),
         Assert(Gtxn[6].asset_amount() == Int(0)),
-        Assert(Gtxn[6].fee() == Int(0)),
-        Assert(Gtxn[6].asset_close_to() == Global.zero_address()),
-        Assert(Gtxn[6].rekey_to() == Global.zero_address()),
 
+        # customer escrow opt-ins to funds asset
         Assert(Gtxn[7].type_enum() == TxnType.AssetTransfer),
         Assert(Gtxn[7].asset_amount() == Int(0)),
 
+        # creator transfers shares to investing escrow
         Assert(Gtxn[8].type_enum() == TxnType.AssetTransfer),
-        Assert(Gtxn[8].asset_amount() == Int(0)),
-
-        Assert(Gtxn[9].type_enum() == TxnType.AssetTransfer),
-        Assert(Gtxn[9].xfer_asset() == Btoi(Gtxn[0].application_args[4])),
+        Assert(Gtxn[8].xfer_asset() == Btoi(Gtxn[1].application_args[3])),
 
         Approve()
     )
@@ -70,11 +72,11 @@ def program():
         Assert(Gtxn[1].asset_close_to() == Global.zero_address()),
         Assert(Gtxn[1].rekey_to() == Global.zero_address()),
 
-        # investor pays for shares: funds xfer to central escrow
+        # investor pays for shares: funds xfer to app escrow
         Assert(Gtxn[2].type_enum() == TxnType.AssetTransfer),
         Assert(Gtxn[2].asset_amount() > Int(0)),
         Assert(Gtxn[2].xfer_asset() == tmpl_funds_asset_id), 
-        Assert(Gtxn[2].asset_receiver() == tmpl_central_escrow_address),
+        Assert(Gtxn[2].asset_receiver() == tmpl_app_escrow_address),
 
         # investor opts-in to shares 
         Assert(Gtxn[3].type_enum() == TxnType.AssetTransfer),
@@ -92,7 +94,7 @@ def program():
     )
 
     program = Cond(
-        [Global.group_size() == Int(10), handle_setup_dao],
+        [Global.group_size() == Int(9), handle_setup_dao],
         [Gtxn[0].application_args[0] == Bytes("invest"), handle_invest],
     )
 

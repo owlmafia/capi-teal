@@ -1,6 +1,6 @@
 #pragma version 5
 global GroupSize
-int 10
+int 9
 ==
 bnz main_l4
 gtxna 0 ApplicationArgs 0
@@ -57,27 +57,27 @@ int 1
 return
 main_l4:
 gtxn 0 TypeEnum
-int appl
-==
-assert
-gtxn 0 OnCompletion
-int NoOp
-==
-assert
-gtxn 0 ApplicationID
-int TMPL_CENTRAL_APP_ID
-==
-assert
-gtxn 0 NumAppArgs
-int 14
-==
-assert
-gtxn 1 TypeEnum
 int pay
 ==
 assert
-gtxn 1 Receiver
-gtxna 0 ApplicationArgs 0
+gtxn 0 Receiver
+addr TMPL_APP_ESCROW_ADDRESS
+==
+assert
+gtxn 1 TypeEnum
+int appl
+==
+assert
+gtxn 1 ApplicationID
+int TMPL_CENTRAL_APP_ID
+==
+assert
+gtxn 1 OnCompletion
+int NoOp
+==
+assert
+gtxn 1 NumAppArgs
+int 13
 ==
 assert
 gtxn 2 TypeEnum
@@ -85,7 +85,7 @@ int pay
 ==
 assert
 gtxn 2 Receiver
-gtxna 0 ApplicationArgs 1
+gtxna 1 ApplicationArgs 0
 ==
 assert
 gtxn 3 TypeEnum
@@ -102,18 +102,6 @@ int axfer
 assert
 gtxn 5 AssetAmount
 int 0
-==
-assert
-gtxn 5 Fee
-int 0
-==
-assert
-gtxn 5 AssetCloseTo
-global ZeroAddress
-==
-assert
-gtxn 5 RekeyTo
-global ZeroAddress
 ==
 assert
 gtxn 6 TypeEnum
@@ -136,16 +124,8 @@ gtxn 8 TypeEnum
 int axfer
 ==
 assert
-gtxn 8 AssetAmount
-int 0
-==
-assert
-gtxn 9 TypeEnum
-int axfer
-==
-assert
-gtxn 9 XferAsset
-gtxna 0 ApplicationArgs 4
+gtxn 8 XferAsset
+gtxna 1 ApplicationArgs 3
 btoi
 ==
 assert

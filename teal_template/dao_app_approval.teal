@@ -1,46 +1,69 @@
 #pragma version 5
+global GroupSize
+int 9
+==
+bnz main_l22
 gtxn 0 ApplicationID
 int 0
 ==
-bnz main_l20
+bnz main_l21
 gtxn 0 OnCompletion
 int 4
 ==
-bnz main_l19
-global GroupSize
-int 10
-==
-bnz main_l18
+bnz main_l20
 gtxna 0 ApplicationArgs 0
 byte "optin"
 ==
-bnz main_l17
+bnz main_l19
 gtxna 0 ApplicationArgs 0
 byte "unlock"
 ==
-bnz main_l16
+bnz main_l18
 gtxna 0 ApplicationArgs 0
 byte "claim"
 ==
-bnz main_l15
+bnz main_l17
 gtxna 0 ApplicationArgs 0
 byte "lock"
 ==
-bnz main_l14
+bnz main_l16
 gtxna 0 ApplicationArgs 0
 byte "drain"
 ==
-bnz main_l13
+bnz main_l15
 gtxna 0 ApplicationArgs 0
 byte "invest"
 ==
-bnz main_l12
+bnz main_l14
 gtxna 0 ApplicationArgs 0
 byte "update_data"
 ==
-bnz main_l11
+bnz main_l13
+gtxna 0 ApplicationArgs 0
+byte "withdraw"
+==
+bnz main_l12
 err
-main_l11:
+main_l12:
+gtxn 0 Sender
+addr TMPL_OWNER
+==
+assert
+itxn_begin
+int axfer
+itxn_field TypeEnum
+gtxna 0 ApplicationArgs 1
+btoi
+itxn_field AssetAmount
+txn Sender
+itxn_field AssetReceiver
+byte "FundsAssetId"
+app_global_get
+itxn_field XferAsset
+itxn_submit
+int 1
+return
+main_l13:
 gtxn 0 TypeEnum
 int appl
 ==
@@ -54,46 +77,43 @@ int NoOp
 ==
 assert
 gtxn 0 NumAppArgs
-int 12
+int 11
 ==
 assert
-byte "CentralEscrowAddress"
+byte "CustomerEscrowAddress"
 gtxna 0 ApplicationArgs 1
 app_global_put
-byte "CustomerEscrowAddress"
+byte "InvestingEscrowAddress"
 gtxna 0 ApplicationArgs 2
 app_global_put
-byte "InvestingEscrowAddress"
+byte "LockingEscrowAddress"
 gtxna 0 ApplicationArgs 3
 app_global_put
-byte "LockingEscrowAddress"
+byte "DaoName"
 gtxna 0 ApplicationArgs 4
 app_global_put
-byte "DaoName"
+byte "DaoDesc"
 gtxna 0 ApplicationArgs 5
 app_global_put
-byte "DaoDesc"
-gtxna 0 ApplicationArgs 6
-app_global_put
 byte "SharePrice"
-gtxna 0 ApplicationArgs 7
+gtxna 0 ApplicationArgs 6
 btoi
 app_global_put
 byte "LogoUrl"
-gtxna 0 ApplicationArgs 8
+gtxna 0 ApplicationArgs 7
 app_global_put
 byte "SocialMediaUrl"
-gtxna 0 ApplicationArgs 9
+gtxna 0 ApplicationArgs 8
 app_global_put
 byte "Owner"
-gtxna 0 ApplicationArgs 10
+gtxna 0 ApplicationArgs 9
 app_global_put
 byte "Versions"
-gtxna 0 ApplicationArgs 11
+gtxna 0 ApplicationArgs 10
 app_global_put
 int 1
 return
-main_l12:
+main_l14:
 global GroupSize
 int 4
 ==
@@ -141,8 +161,7 @@ app_global_get
 ==
 assert
 gtxn 2 AssetReceiver
-byte "CentralEscrowAddress"
-app_global_get
+global CurrentApplicationAddress
 ==
 assert
 gtxn 3 TypeEnum
@@ -221,7 +240,7 @@ gtxna 0 ApplicationArgs 1
 app_local_put
 int 1
 return
-main_l13:
+main_l15:
 global GroupSize
 int 4
 ==
@@ -273,8 +292,7 @@ app_global_get
 ==
 assert
 gtxn 2 AssetReceiver
-byte "CentralEscrowAddress"
-app_global_get
+global CurrentApplicationAddress
 ==
 assert
 gtxn 3 TypeEnum
@@ -313,7 +331,7 @@ gtxn 2 AssetAmount
 app_global_put
 int 1
 return
-main_l14:
+main_l16:
 global GroupSize
 int 2
 ==
@@ -396,9 +414,9 @@ gtxna 0 ApplicationArgs 1
 app_local_put
 int 1
 return
-main_l15:
+main_l17:
 global GroupSize
-int 2
+int 1
 ==
 assert
 gtxn 0 TypeEnum
@@ -413,28 +431,9 @@ gtxn 0 OnCompletion
 int NoOp
 ==
 assert
-gtxn 0 Sender
-gtxn 1 AssetReceiver
-==
-assert
-gtxn 1 TypeEnum
+itxn_begin
 int axfer
-==
-assert
-gtxn 1 Sender
-byte "CentralEscrowAddress"
-app_global_get
-==
-assert
-gtxn 1 AssetAmount
-int 0
->
-assert
-gtxn 1 XferAsset
-byte "FundsAssetId"
-app_global_get
-==
-assert
+itxn_field TypeEnum
 gtxn 0 Sender
 byte "Shares"
 app_local_get
@@ -453,20 +452,41 @@ gtxn 0 Sender
 byte "ClaimedTotal"
 app_local_get
 -
-gtxn 1 AssetAmount
->=
-assert
+itxn_field AssetAmount
+txn Sender
+itxn_field AssetReceiver
+byte "FundsAssetId"
+app_global_get
+itxn_field XferAsset
+itxn_submit
 gtxn 0 Sender
 byte "ClaimedTotal"
 gtxn 0 Sender
 byte "ClaimedTotal"
 app_local_get
-gtxn 1 AssetAmount
+gtxn 0 Sender
+byte "Shares"
+app_local_get
+int TMPL_PRECISION__
+*
+int TMPL_INVESTORS_SHARE
+*
+int TMPL_SHARE_SUPPLY
+/
+byte "CentralReceivedTotal"
+app_global_get
+*
+int TMPL_PRECISION_SQUARE
+/
+gtxn 0 Sender
+byte "ClaimedTotal"
+app_local_get
+-
 +
 app_local_put
 int 1
 return
-main_l16:
+main_l18:
 global GroupSize
 int 2
 ==
@@ -508,7 +528,7 @@ app_global_get
 assert
 int 1
 return
-main_l17:
+main_l19:
 gtxn 0 TypeEnum
 int appl
 ==
@@ -523,29 +543,51 @@ int OptIn
 assert
 int 1
 return
-main_l18:
+main_l20:
+global GroupSize
+int 1
+==
+assert
 gtxn 0 TypeEnum
 int appl
 ==
 assert
-gtxn 0 ApplicationID
-global CurrentApplicationID
+gtxn 0 Sender
+addr TMPL_OWNER
 ==
 assert
-gtxn 0 OnCompletion
-int NoOp
+int 1
+return
+main_l21:
+gtxn 0 TypeEnum
+int appl
 ==
 assert
-gtxn 0 NumAppArgs
-int 14
-==
-assert
-gtxn 1 TypeEnum
+int 1
+return
+main_l22:
+gtxn 0 TypeEnum
 int pay
 ==
 assert
-gtxn 1 Receiver
-gtxna 0 ApplicationArgs 0
+gtxn 0 Receiver
+global CurrentApplicationAddress
+==
+assert
+gtxn 1 TypeEnum
+int appl
+==
+assert
+gtxn 1 ApplicationID
+global CurrentApplicationID
+==
+assert
+gtxn 1 OnCompletion
+int NoOp
+==
+assert
+gtxn 1 NumAppArgs
+int 13
 ==
 assert
 gtxn 2 TypeEnum
@@ -553,7 +595,7 @@ int pay
 ==
 assert
 gtxn 2 Receiver
-gtxna 0 ApplicationArgs 1
+gtxna 1 ApplicationArgs 0
 ==
 assert
 gtxn 3 TypeEnum
@@ -592,89 +634,68 @@ gtxn 8 TypeEnum
 int axfer
 ==
 assert
-gtxn 8 AssetAmount
-int 0
-==
-assert
-gtxn 9 TypeEnum
-int axfer
-==
-assert
-gtxn 9 XferAsset
-gtxna 0 ApplicationArgs 4
+gtxn 8 XferAsset
+gtxna 1 ApplicationArgs 3
 btoi
 ==
 assert
 byte "CentralReceivedTotal"
 int 0
 app_global_put
-byte "CentralEscrowAddress"
-gtxna 0 ApplicationArgs 0
-app_global_put
 byte "CustomerEscrowAddress"
-gtxna 0 ApplicationArgs 1
+gtxna 1 ApplicationArgs 0
 app_global_put
 byte "InvestingEscrowAddress"
-gtxna 0 ApplicationArgs 2
+gtxna 1 ApplicationArgs 1
 app_global_put
 byte "LockingEscrowAddress"
-gtxna 0 ApplicationArgs 3
+gtxna 1 ApplicationArgs 2
 app_global_put
 byte "SharesAssetId"
-gtxna 0 ApplicationArgs 4
+gtxna 1 ApplicationArgs 3
 btoi
 app_global_put
 byte "FundsAssetId"
-gtxna 0 ApplicationArgs 5
+gtxna 1 ApplicationArgs 4
 btoi
 app_global_put
 byte "DaoName"
-gtxna 0 ApplicationArgs 6
+gtxna 1 ApplicationArgs 5
 app_global_put
 byte "DaoDesc"
-gtxna 0 ApplicationArgs 7
+gtxna 1 ApplicationArgs 6
 app_global_put
 byte "SharePrice"
-gtxna 0 ApplicationArgs 8
+gtxna 1 ApplicationArgs 7
 btoi
 app_global_put
 byte "InvestorsPart"
-gtxna 0 ApplicationArgs 9
+gtxna 1 ApplicationArgs 8
 btoi
 app_global_put
 byte "LogoUrl"
-gtxna 0 ApplicationArgs 10
+gtxna 1 ApplicationArgs 9
 app_global_put
 byte "SocialMediaUrl"
-gtxna 0 ApplicationArgs 11
+gtxna 1 ApplicationArgs 10
 app_global_put
 byte "Owner"
-gtxna 0 ApplicationArgs 12
+gtxna 1 ApplicationArgs 11
 app_global_put
 byte "Versions"
-gtxna 0 ApplicationArgs 13
+gtxna 1 ApplicationArgs 12
 app_global_put
-int 1
-return
-main_l19:
-global GroupSize
-int 1
-==
-assert
-gtxn 0 TypeEnum
-int appl
-==
-assert
-gtxn 0 Sender
-addr TMPL_OWNER
-==
-assert
-int 1
-return
-main_l20:
-gtxn 0 TypeEnum
-int appl
-==
-assert
+itxn_begin
+int axfer
+itxn_field TypeEnum
+global CurrentApplicationAddress
+itxn_field AssetReceiver
+int 0
+itxn_field AssetAmount
+gtxna 1 Assets 0
+itxn_field XferAsset
+int 0
+itxn_field Fee
+itxn_submit
 int 1
 return
