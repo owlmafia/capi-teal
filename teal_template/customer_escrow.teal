@@ -1,6 +1,6 @@
 #pragma version 5
 global GroupSize
-int 7
+int 5
 ==
 bnz main_l4
 gtxna 0 ApplicationArgs 0
@@ -101,7 +101,7 @@ int NoOp
 ==
 assert
 gtxn 1 NumAppArgs
-int 12
+int 11
 ==
 assert
 gtxn 2 TypeEnum
@@ -113,31 +113,19 @@ gtxna 1 ApplicationArgs 0
 ==
 assert
 gtxn 3 TypeEnum
-int pay
+int axfer
+==
+assert
+gtxn 3 AssetAmount
+int 0
 ==
 assert
 gtxn 4 TypeEnum
 int axfer
 ==
 assert
-gtxn 4 AssetAmount
-int 0
-==
-assert
-gtxn 5 TypeEnum
-int axfer
-==
-assert
-gtxn 5 AssetAmount
-int 0
-==
-assert
-gtxn 6 TypeEnum
-int axfer
-==
-assert
-gtxn 6 XferAsset
-gtxna 1 ApplicationArgs 2
+gtxn 4 XferAsset
+gtxna 1 ApplicationArgs 1
 btoi
 ==
 assert

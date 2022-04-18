@@ -15,7 +15,6 @@ tmpl_owner = Tmpl.Addr("TMPL_OWNER")
 GLOBAL_RECEIVED_TOTAL = "CentralReceivedTotal"
 
 GLOBAL_CUSTOMER_ESCROW_ADDRESS = "CustomerEscrowAddress"
-GLOBAL_INVESTING_ESCROW_ADDRESS = "InvestingEscrowAddress"
 
 GLOBAL_SHARES_ASSET_ID = "SharesAssetId"
 GLOBAL_FUNDS_ASSET_ID = "FundsAssetId"
@@ -56,7 +55,7 @@ def approval_program():
     )
 
     handle_setup_dao = Seq(
-        # # creator sends min balance to app address
+        # creator sends min balance to app address
         Assert(Gtxn[0].type_enum() == TxnType.Payment),
         Assert(Gtxn[0].receiver() == Global.current_application_address()),
         
@@ -64,47 +63,40 @@ def approval_program():
         Assert(Gtxn[1].type_enum() == TxnType.ApplicationCall),
         Assert(Gtxn[1].application_id() == Global.current_application_id()),
         Assert(Gtxn[1].on_completion() == OnComplete.NoOp),
-        Assert(Gtxn[1].application_args.length() == Int(12)),
+        Assert(Gtxn[1].application_args.length() == Int(11)),
 
         # creator sends min balance to customer escrow
         Assert(Gtxn[2].type_enum() == TxnType.Payment),
         Assert(Gtxn[2].receiver() == Gtxn[1].application_args[0]),
 
-        # creator sends min balance to investing escrow
-        Assert(Gtxn[3].type_enum() == TxnType.Payment),
-
-        # investing escrow opt-ins to shares
-        Assert(Gtxn[4].type_enum() == TxnType.AssetTransfer),
-        Assert(Gtxn[4].asset_amount() == Int(0)),
-
         # customer escrow opt-ins to funds asset
-        Assert(Gtxn[5].type_enum() == TxnType.AssetTransfer),
-        Assert(Gtxn[5].asset_amount() == Int(0)),
+        Assert(Gtxn[3].type_enum() == TxnType.AssetTransfer),
+        Assert(Gtxn[3].asset_amount() == Int(0)),
 
-        # creator transfers shares to investing escrow
-        Assert(Gtxn[6].type_enum() == TxnType.AssetTransfer),
-        Assert(Gtxn[6].xfer_asset() == Btoi(Gtxn[1].application_args[2])),
+        # creator transfers shares to app escrow
+        Assert(Gtxn[4].type_enum() == TxnType.AssetTransfer),
+        Assert(Gtxn[4].xfer_asset() == Btoi(Gtxn[1].application_args[1])),
 
         # initialize state
         App.globalPut(Bytes(GLOBAL_RECEIVED_TOTAL), Int(0)),
+        App.globalPut(Bytes(GLOBAL_LOCKED_SHARES), Int(0)),
 
         App.globalPut(Bytes(GLOBAL_CUSTOMER_ESCROW_ADDRESS), Gtxn[1].application_args[0]),
-        App.globalPut(Bytes(GLOBAL_INVESTING_ESCROW_ADDRESS), Gtxn[1].application_args[1]),
 
-        App.globalPut(Bytes(GLOBAL_SHARES_ASSET_ID), Btoi(Gtxn[1].application_args[2])),
-        App.globalPut(Bytes(GLOBAL_FUNDS_ASSET_ID), Btoi(Gtxn[1].application_args[3])),
+        App.globalPut(Bytes(GLOBAL_SHARES_ASSET_ID), Btoi(Gtxn[1].application_args[1])),
+        App.globalPut(Bytes(GLOBAL_FUNDS_ASSET_ID), Btoi(Gtxn[1].application_args[2])),
 
-        App.globalPut(Bytes(GLOBAL_DAO_NAME), Gtxn[1].application_args[4]),
-        App.globalPut(Bytes(GLOBAL_DAO_DESC), Gtxn[1].application_args[5]),
-        App.globalPut(Bytes(GLOBAL_SHARE_PRICE), Btoi(Gtxn[1].application_args[6])),
-        App.globalPut(Bytes(GLOBAL_INVESTORS_PART), Btoi(Gtxn[1].application_args[7])),
+        App.globalPut(Bytes(GLOBAL_DAO_NAME), Gtxn[1].application_args[3]),
+        App.globalPut(Bytes(GLOBAL_DAO_DESC), Gtxn[1].application_args[4]),
+        App.globalPut(Bytes(GLOBAL_SHARE_PRICE), Btoi(Gtxn[1].application_args[5])),
+        App.globalPut(Bytes(GLOBAL_INVESTORS_PART), Btoi(Gtxn[1].application_args[6])),
 
-        App.globalPut(Bytes(GLOBAL_LOGO_URL), Gtxn[1].application_args[8]),
-        App.globalPut(Bytes(GLOBAL_SOCIAL_MEDIA_URL), Gtxn[1].application_args[9]),
+        App.globalPut(Bytes(GLOBAL_LOGO_URL), Gtxn[1].application_args[7]),
+        App.globalPut(Bytes(GLOBAL_SOCIAL_MEDIA_URL), Gtxn[1].application_args[8]),
         
-        App.globalPut(Bytes(GLOBAL_OWNER), Gtxn[1].application_args[10]),
+        App.globalPut(Bytes(GLOBAL_OWNER), Gtxn[1].application_args[9]),
 
-        App.globalPut(Bytes(GLOBAL_VERSIONS), Gtxn[1].application_args[11]),
+        App.globalPut(Bytes(GLOBAL_VERSIONS), Gtxn[1].application_args[10]),
 
         InnerTxnBuilder.Begin(),
         # optin to funds asset
@@ -134,22 +126,23 @@ def approval_program():
     )
 
     handle_update_data = Seq(
+        Assert(Global.group_size() == Int(1)),
+
         # app call
         Assert(Gtxn[0].type_enum() == TxnType.ApplicationCall),
         Assert(Gtxn[0].application_id() == Global.current_application_id()),
         Assert(Gtxn[0].on_completion() == OnComplete.NoOp),
-        Assert(Gtxn[0].application_args.length() == Int(10)),
+        Assert(Gtxn[0].application_args.length() == Int(9)),
 
         # update data
         App.globalPut(Bytes(GLOBAL_CUSTOMER_ESCROW_ADDRESS), Gtxn[0].application_args[1]),
-        App.globalPut(Bytes(GLOBAL_INVESTING_ESCROW_ADDRESS), Gtxn[0].application_args[2]),
-        App.globalPut(Bytes(GLOBAL_DAO_NAME), Gtxn[0].application_args[3]),
-        App.globalPut(Bytes(GLOBAL_DAO_DESC), Gtxn[0].application_args[4]),
-        App.globalPut(Bytes(GLOBAL_SHARE_PRICE), Btoi(Gtxn[0].application_args[5])),
-        App.globalPut(Bytes(GLOBAL_LOGO_URL), Gtxn[0].application_args[6]),
-        App.globalPut(Bytes(GLOBAL_SOCIAL_MEDIA_URL), Gtxn[0].application_args[7]),
-        App.globalPut(Bytes(GLOBAL_OWNER), Gtxn[0].application_args[8]),
-        App.globalPut(Bytes(GLOBAL_VERSIONS), Gtxn[0].application_args[9]),
+        App.globalPut(Bytes(GLOBAL_DAO_NAME), Gtxn[0].application_args[2]),
+        App.globalPut(Bytes(GLOBAL_DAO_DESC), Gtxn[0].application_args[3]),
+        App.globalPut(Bytes(GLOBAL_SHARE_PRICE), Btoi(Gtxn[0].application_args[4])),
+        App.globalPut(Bytes(GLOBAL_LOGO_URL), Gtxn[0].application_args[5]),
+        App.globalPut(Bytes(GLOBAL_SOCIAL_MEDIA_URL), Gtxn[0].application_args[6]),
+        App.globalPut(Bytes(GLOBAL_OWNER), Gtxn[0].application_args[7]),
+        App.globalPut(Bytes(GLOBAL_VERSIONS), Gtxn[0].application_args[8]),
 
         # for now shares asset, funds asset and investor's part not updatable - have to think about implications
 
@@ -157,6 +150,8 @@ def approval_program():
     )
 
     handle_optin = Seq(
+        Assert(Global.group_size() == Int(1)),
+
         Assert(Gtxn[0].type_enum() == TxnType.ApplicationCall),
         Assert(Gtxn[0].application_id() == Global.current_application_id()),
         Assert(Gtxn[0].on_completion() == OnComplete.OptIn),
@@ -241,47 +236,53 @@ def approval_program():
         Approve()
     )
 
-    # expects the 2 first txs of invest / lock to be the app call and lock (shares transfer to app)
-    lock_shares = Seq(
-        Assert(Gtxn[1].asset_amount() > Int(0)), # sanity: don't allow locking 0 shares 
-        App.localPut( # set / increment share count in local state
-            Gtxn[0].sender(), 
-            Bytes(LOCAL_SHARES), 
-            Add(
-                App.localGet(Gtxn[0].sender(), Bytes(LOCAL_SHARES)),
-                Gtxn[1].asset_amount()
-            )
-        ),
-        # initialize already claimed local state
-        App.localPut(
-            Gtxn[0].sender(), 
-            Bytes(LOCAL_CLAIMED_TOTAL), 
-            # NOTE that this sets claimedTotal to the entitled amount each time that the investor buys/locks shares
-            # meaning that investors may lose pending dividend by buying or locking new shares
-            # TODO improve? - a non TEAL way could be to just automatically retrieve pending dividend in the same group 
-            # see more notes in old repo
-            claimable_dividend
-            # Gtxn[1].asset_amount()
-        ),
-        # remember initial already claimed local state
-        App.localPut( 
-            Gtxn[0].sender(),
-            Bytes(LOCAL_CLAIMED_INIT), 
-            App.localGet(Gtxn[0].sender(), Bytes(LOCAL_CLAIMED_TOTAL))
-        ),
+    # expects tx 1 to be the shares xfer to the app and its sender verified as app caller (local state)
+    @Subroutine(TealType.none)
+    def lock_shares(share_amount, sender): 
+        return Seq(
+            # TODO is this really needed?
+            # Assert(Gtxn[1].asset_amount() > Int(0)), # sanity: don't allow locking 0 shares 
 
-        # increment locked shares global state
-        App.globalPut(
-            Bytes(GLOBAL_LOCKED_SHARES), 
-            Add(App.globalGet(Bytes(GLOBAL_LOCKED_SHARES)), Gtxn[1].asset_amount())
-        ),
-    )
+            App.localPut( # set / increment share count in local state
+                sender,
+                Bytes(LOCAL_SHARES), 
+                Add(
+                    App.localGet(sender, Bytes(LOCAL_SHARES)),
+                    share_amount
+                )
+            ),
+            # initialize already claimed local state
+            App.localPut(
+                sender,
+                Bytes(LOCAL_CLAIMED_TOTAL), 
+                # NOTE that this sets claimedTotal to the entitled amount each time that the investor buys/locks shares
+                # meaning that investors may lose pending dividend by buying or locking new shares
+                # TODO improve? - a non TEAL way could be to just automatically retrieve pending dividend in the same group 
+                # see more notes in old repo
+                claimable_dividend
+                # Gtxn[1].asset_amount()
+            ),
+            # remember initial already claimed local state
+            App.localPut( 
+                sender,
+                Bytes(LOCAL_CLAIMED_INIT), 
+                App.localGet(sender, Bytes(LOCAL_CLAIMED_TOTAL))
+            ),
+
+            # increment locked shares global state
+            App.globalPut(
+                Bytes(GLOBAL_LOCKED_SHARES), 
+                Add(App.globalGet(Bytes(GLOBAL_LOCKED_SHARES)), share_amount)
+            ),
+        )
 
     # For invest/lock. Dao id expected as first arg of the first tx
     # save the dao id in local state, so we can find daos where a user invested in (with the indexer)  
     # TODO rename in CapiDao or similar - this key is used to filter for txs belonging to capi / dao id use case
     # - we don't have the app id when querying this, only the sender account and this key
-    save_dao_id = App.localPut(Gtxn[0].sender(), Bytes(LOCAL_DAO_ID), Gtxn[0].application_args[1])
+    # NOTE assumes that sender of Gtxn[0] is the app caller (ownler of local state where id should be written)
+    # TODO review whether really needed
+    save_dao_id = App.localPut(Gtxn[0].sender(), Bytes(LOCAL_DAO_ID), Global.current_application_id())
 
     handle_lock = Seq(
         Assert(Global.group_size() == Int(2)),
@@ -290,8 +291,7 @@ def approval_program():
         Assert(Gtxn[0].type_enum() == TxnType.ApplicationCall),
         Assert(Gtxn[0].application_id() == Global.current_application_id()),
         Assert(Gtxn[0].on_completion() == OnComplete.NoOp),
-        Assert(Gtxn[0].application_args.length() == Int(2)),
-        Assert(Gtxn[0].sender() == Gtxn[1].sender()), # app caller is locking the shares
+        Assert(Gtxn[0].application_args.length() == Int(1)),
 
         # shares xfer to app
         Assert(Gtxn[1].type_enum() == TxnType.AssetTransfer),
@@ -299,8 +299,10 @@ def approval_program():
         Assert(Gtxn[1].asset_receiver() == Global.current_application_address()),
         Assert(Gtxn[1].asset_amount() > Int(0)),
 
+        Assert(Gtxn[0].sender() == Gtxn[1].sender()), # app caller is locking the shares
+
         # save shares on local state
-        lock_shares,
+        lock_shares(Gtxn[1].asset_amount(), Gtxn[0].sender()),
 
         # save the dao id on local state
         save_dao_id,
@@ -359,18 +361,19 @@ def approval_program():
     )
     
     handle_invest = Seq(
-        Assert(Global.group_size() == Int(4)),
+        # Assert(Global.group_size() == Int(3)), # used as condition
+
+        # investor opts-in to shares (needs to be before app call with inner tx sending the asset)
+        Assert(Gtxn[0].type_enum() == TxnType.AssetTransfer), # optin to shares
+        Assert(Gtxn[0].xfer_asset() == App.globalGet(Bytes(GLOBAL_SHARES_ASSET_ID))),
+        Assert(Gtxn[0].asset_amount() == Int(0)),
+        Assert(Gtxn[0].asset_receiver() == Gtxn[0].sender()), # TODO is this check needed - if yes add to other optins
 
         # app call to initialize shares state
-        Assert(Gtxn[0].type_enum() == TxnType.ApplicationCall),
-        Assert(Gtxn[0].application_id() == Global.current_application_id()),
-        Assert(Gtxn[0].on_completion() == OnComplete.NoOp),
-        Assert(Gtxn[0].application_args.length() == Int(2)),
-
-        # shares xfer to investor
-        Assert(Gtxn[1].type_enum() == TxnType.AssetTransfer),
-        Assert(Gtxn[1].asset_amount() > Int(0)),
-        Assert(Gtxn[1].xfer_asset() == App.globalGet(Bytes(GLOBAL_SHARES_ASSET_ID))), # receiving shares asset
+        Assert(Gtxn[1].type_enum() == TxnType.ApplicationCall),
+        Assert(Gtxn[1].application_id() == Global.current_application_id()),
+        Assert(Gtxn[1].on_completion() == OnComplete.NoOp),
+        Assert(Gtxn[1].application_args.length() == Int(2)),
 
         # investor pays for shares: funds xfer to app escrow
         Assert(Gtxn[2].type_enum() == TxnType.AssetTransfer),
@@ -378,21 +381,16 @@ def approval_program():
         Assert(Gtxn[2].xfer_asset() == App.globalGet(Bytes(GLOBAL_FUNDS_ASSET_ID))),
         Assert(Gtxn[2].asset_receiver() == Global.current_application_address()),
 
-        # investor opts-in to shares 
-        Assert(Gtxn[3].type_enum() == TxnType.AssetTransfer), # optin to shares
-        Assert(Gtxn[3].xfer_asset() == App.globalGet(Bytes(GLOBAL_SHARES_ASSET_ID))),
-        Assert(Gtxn[3].asset_amount() == Int(0)),
-        Assert(Gtxn[3].asset_receiver() == Gtxn[3].sender()), # TODO is this optin check needed - if yes add it to other optins
+        # the investor sends all txs
+        Assert(Gtxn[0].sender() == Gtxn[1].sender()),
+        Assert(Gtxn[1].sender() == Gtxn[2].sender()),
 
-        # the investor sends 3 txs (app call, pay for shares, shares optin)
-        Assert(Gtxn[0].sender() == Gtxn[2].sender()),
-        Assert(Gtxn[2].sender() == Gtxn[3].sender()),
-
-        # TODO check that gtxn 1 sender is invest escrow and receiver app escrow?
-        Assert(Gtxn[2].asset_amount() == Mul(Gtxn[1].asset_amount(), tmpl_share_price)), # Paying the correct price for the bought shares
+        # double-check that the share amount matches what the caller expects
+        # (just in case for unexpected rounding issues)
+        Assert(Div(Gtxn[2].asset_amount(), tmpl_share_price) == Btoi(Gtxn[1].application_args[1])),
 
         # save shares on local state
-        lock_shares,
+        lock_shares(Div(Gtxn[2].asset_amount(), tmpl_share_price), Gtxn[0].sender()),
 
         # save the dao id on local state
         save_dao_id,
@@ -401,6 +399,8 @@ def approval_program():
     )
 
     handle_withdrawal = Seq(
+        Assert(Global.group_size() == Int(1)),
+
         # only the owner can withdraw
 
         Assert(Gtxn[0].sender() == tmpl_owner),
@@ -418,15 +418,15 @@ def approval_program():
     )
     
     program = Cond(
-        [Global.group_size() == Int(7), handle_setup_dao],
-        [Gtxn[0].application_id() == Int(0), handle_create],
+        [Global.group_size() == Int(5), handle_setup_dao],
         [Gtxn[0].on_completion() == Int(4), handle_update],
+        [Global.group_size() == Int(3), handle_invest],
+        [Gtxn[0].application_id() == Int(0), handle_create],
         [Gtxn[0].application_args[0] == Bytes("optin"), handle_optin],
         [Gtxn[0].application_args[0] == Bytes("unlock"), handle_unlock],
         [Gtxn[0].application_args[0] == Bytes("claim"), handle_claim],
         [Gtxn[0].application_args[0] == Bytes("lock"), handle_lock],
         [Gtxn[0].application_args[0] == Bytes("drain"), handle_drain],
-        [Gtxn[0].application_args[0] == Bytes("invest"), handle_invest],
         [Gtxn[0].application_args[0] == Bytes("update_data"), handle_update_data],
         [Gtxn[0].application_args[0] == Bytes("withdraw"), handle_withdrawal],
     )
