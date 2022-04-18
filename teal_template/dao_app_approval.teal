@@ -231,6 +231,12 @@ gtxn 0 Sender
 byte "ClaimedTotal"
 app_local_get
 app_local_put
+byte "LockedShares"
+byte "LockedShares"
+app_global_get
+gtxn 1 AssetAmount
++
+app_global_put
 gtxn 0 Sender
 byte "Dao"
 gtxna 0 ApplicationArgs 1
@@ -409,6 +415,12 @@ gtxn 0 Sender
 byte "ClaimedTotal"
 app_local_get
 app_local_put
+byte "LockedShares"
+byte "LockedShares"
+app_global_get
+gtxn 1 AssetAmount
++
+app_global_put
 gtxn 0 Sender
 byte "Dao"
 gtxna 0 ApplicationArgs 1
@@ -518,6 +530,14 @@ app_global_get
 itxn_field XferAsset
 int 0
 itxn_field Fee
+byte "LockedShares"
+byte "LockedShares"
+app_global_get
+gtxn 0 Sender
+byte "Shares"
+app_local_get
+-
+app_global_put
 itxn_submit
 int 1
 return

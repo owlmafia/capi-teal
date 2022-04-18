@@ -20,6 +20,8 @@ GLOBAL_INVESTING_ESCROW_ADDRESS = "InvestingEscrowAddress"
 GLOBAL_SHARES_ASSET_ID = "SharesAssetId"
 GLOBAL_FUNDS_ASSET_ID = "FundsAssetId"
 
+GLOBAL_LOCKED_SHARES = "LockedShares"
+
 GLOBAL_DAO_NAME = "DaoName"
 GLOBAL_DAO_DESC = "DaoDesc"
 GLOBAL_SHARE_PRICE = "SharePrice"
@@ -178,6 +180,13 @@ def approval_program():
             TxnField.xfer_asset: App.globalGet(Bytes(GLOBAL_SHARES_ASSET_ID)),
             TxnField.fee: Int(0)
         }),
+
+        # decrement locked shares global state
+        App.globalPut(
+            Bytes(GLOBAL_LOCKED_SHARES), 
+            Minus(App.globalGet(Bytes(GLOBAL_LOCKED_SHARES)), App.localGet(Gtxn[0].sender(), Bytes(LOCAL_SHARES)))
+        ),
+
         InnerTxnBuilder.Submit(),
 
         Approve()
@@ -259,6 +268,12 @@ def approval_program():
             Gtxn[0].sender(),
             Bytes(LOCAL_CLAIMED_INIT), 
             App.localGet(Gtxn[0].sender(), Bytes(LOCAL_CLAIMED_TOTAL))
+        ),
+
+        # increment locked shares global state
+        App.globalPut(
+            Bytes(GLOBAL_LOCKED_SHARES), 
+            Add(App.globalGet(Bytes(GLOBAL_LOCKED_SHARES)), Gtxn[1].asset_amount())
         ),
     )
 
