@@ -23,6 +23,8 @@ Holds the DAO's funds. Flows:
 
 3) Withdrawing: The DAO owner withdraws funds (e.g. to pay for company's expenses). The DAO owner can withdraw all the funds, emptying the escrow and preventing investors from claiming their dividend. This is intended, for now.
 
+4) Locking / unlocking: The investors lock shares here to be entitled to the dividend.
+
 ## customer_escrow
 
 This is where DAO's customers send payments. It can only send funds to the DAO's escrow.
@@ -34,10 +36,6 @@ Contains the logic to sell shares (swap shares with funds asset). The DAO owner 
 Not sure that this should be a contract account. Maybe a delegated lsig is better.
 
 It may also be possible to merge this with the DAO's escrow, now sure that a separate escrow is necessary.
-
-## locking_escrow
-
-The investors lock shares here to be entitled to the dividend.
 
 # Capi contracts
 

@@ -20,33 +20,26 @@ def program():
         Assert(Gtxn[1].type_enum() == TxnType.ApplicationCall),
         Assert(Gtxn[1].application_id() == tmpl_central_app_id),
         Assert(Gtxn[1].on_completion() == OnComplete.NoOp),
-        Assert(Gtxn[1].application_args.length() == Int(13)),
+        Assert(Gtxn[1].application_args.length() == Int(12)),
 
         # creator sends min balance to customer escrow
         Assert(Gtxn[2].type_enum() == TxnType.Payment),
         Assert(Gtxn[2].receiver() == Gtxn[1].application_args[0]),
 
-        # creator sends min balance to locking escrow
+        # creator sends min balance to investing escrow
         Assert(Gtxn[3].type_enum() == TxnType.Payment),
 
-        # creator sends min balance to investing escrow
-        Assert(Gtxn[4].type_enum() == TxnType.Payment),
+        # investing escrow opt-ins to shares
+        Assert(Gtxn[4].type_enum() == TxnType.AssetTransfer),
+        Assert(Gtxn[4].asset_amount() == Int(0)),
 
-        # locking escrow opt-ins to shares
+        # customer escrow opt-ins to funds asset
         Assert(Gtxn[5].type_enum() == TxnType.AssetTransfer),
         Assert(Gtxn[5].asset_amount() == Int(0)),
 
-        # investing escrow opt-ins to shares
-        Assert(Gtxn[6].type_enum() == TxnType.AssetTransfer),
-        Assert(Gtxn[6].asset_amount() == Int(0)),
-
-        # customer escrow opt-ins to funds asset
-        Assert(Gtxn[7].type_enum() == TxnType.AssetTransfer),
-        Assert(Gtxn[7].asset_amount() == Int(0)),
-
         # creator transfers shares to investing escrow
-        Assert(Gtxn[8].type_enum() == TxnType.AssetTransfer),
-        Assert(Gtxn[8].xfer_asset() == Btoi(Gtxn[1].application_args[3])),
+        Assert(Gtxn[6].type_enum() == TxnType.AssetTransfer),
+        Assert(Gtxn[6].xfer_asset() == Btoi(Gtxn[1].application_args[2])),
 
         Approve()
     )
@@ -82,7 +75,7 @@ def program():
     )
 
     program = Cond(
-        [Global.group_size() == Int(9), handle_setup_dao],
+        [Global.group_size() == Int(7), handle_setup_dao],
         [Gtxn[0].application_args[0] == Bytes("drain"), handle_drain],
     )
 

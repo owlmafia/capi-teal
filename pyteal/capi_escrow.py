@@ -76,7 +76,6 @@ def program():
     )
 
     program = Cond(
-        [Global.group_size() == Int(10), handle_setup],
         [Global.group_size() == Int(3), handle_setup],
         [Gtxn[0].application_args[0] == Bytes("unlock"), handle_unlock],
         [Gtxn[0].application_args[0] == Bytes("claim"), handle_claim],

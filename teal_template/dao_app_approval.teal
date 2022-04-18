@@ -1,6 +1,6 @@
 #pragma version 5
 global GroupSize
-int 9
+int 7
 ==
 bnz main_l22
 gtxn 0 ApplicationID
@@ -77,7 +77,7 @@ int NoOp
 ==
 assert
 gtxn 0 NumAppArgs
-int 11
+int 10
 ==
 assert
 byte "CustomerEscrowAddress"
@@ -86,30 +86,27 @@ app_global_put
 byte "InvestingEscrowAddress"
 gtxna 0 ApplicationArgs 2
 app_global_put
-byte "LockingEscrowAddress"
+byte "DaoName"
 gtxna 0 ApplicationArgs 3
 app_global_put
-byte "DaoName"
+byte "DaoDesc"
 gtxna 0 ApplicationArgs 4
 app_global_put
-byte "DaoDesc"
-gtxna 0 ApplicationArgs 5
-app_global_put
 byte "SharePrice"
-gtxna 0 ApplicationArgs 6
+gtxna 0 ApplicationArgs 5
 btoi
 app_global_put
 byte "LogoUrl"
-gtxna 0 ApplicationArgs 7
+gtxna 0 ApplicationArgs 6
 app_global_put
 byte "SocialMediaUrl"
-gtxna 0 ApplicationArgs 8
+gtxna 0 ApplicationArgs 7
 app_global_put
 byte "Owner"
-gtxna 0 ApplicationArgs 9
+gtxna 0 ApplicationArgs 8
 app_global_put
 byte "Versions"
-gtxna 0 ApplicationArgs 10
+gtxna 0 ApplicationArgs 9
 app_global_put
 int 1
 return
@@ -360,14 +357,18 @@ gtxn 1 TypeEnum
 int axfer
 ==
 assert
-gtxn 1 AssetAmount
-int 0
->
-assert
 gtxn 1 XferAsset
 byte "SharesAssetId"
 app_global_get
 ==
+assert
+gtxn 1 AssetReceiver
+global CurrentApplicationAddress
+==
+assert
+gtxn 1 AssetAmount
+int 0
+>
 assert
 gtxn 1 AssetAmount
 int 0
@@ -488,7 +489,7 @@ int 1
 return
 main_l18:
 global GroupSize
-int 2
+int 1
 ==
 assert
 gtxn 0 TypeEnum
@@ -503,29 +504,21 @@ gtxn 0 ApplicationID
 global CurrentApplicationID
 ==
 assert
-gtxn 1 TypeEnum
+itxn_begin
 int axfer
-==
-assert
-gtxn 1 AssetAmount
-int 0
->
-assert
-gtxn 1 AssetReceiver
+itxn_field TypeEnum
 gtxn 0 Sender
-==
-assert
-gtxn 1 AssetAmount
+itxn_field AssetReceiver
 gtxn 0 Sender
 byte "Shares"
 app_local_get
-==
-assert
-gtxn 1 XferAsset
+itxn_field AssetAmount
 byte "SharesAssetId"
 app_global_get
-==
-assert
+itxn_field XferAsset
+int 0
+itxn_field Fee
+itxn_submit
 int 1
 return
 main_l19:
@@ -587,7 +580,7 @@ int NoOp
 ==
 assert
 gtxn 1 NumAppArgs
-int 13
+int 12
 ==
 assert
 gtxn 2 TypeEnum
@@ -603,7 +596,11 @@ int pay
 ==
 assert
 gtxn 4 TypeEnum
-int pay
+int axfer
+==
+assert
+gtxn 4 AssetAmount
+int 0
 ==
 assert
 gtxn 5 TypeEnum
@@ -618,24 +615,8 @@ gtxn 6 TypeEnum
 int axfer
 ==
 assert
-gtxn 6 AssetAmount
-int 0
-==
-assert
-gtxn 7 TypeEnum
-int axfer
-==
-assert
-gtxn 7 AssetAmount
-int 0
-==
-assert
-gtxn 8 TypeEnum
-int axfer
-==
-assert
-gtxn 8 XferAsset
-gtxna 1 ApplicationArgs 3
+gtxn 6 XferAsset
+gtxna 1 ApplicationArgs 2
 btoi
 ==
 assert
@@ -648,42 +629,39 @@ app_global_put
 byte "InvestingEscrowAddress"
 gtxna 1 ApplicationArgs 1
 app_global_put
-byte "LockingEscrowAddress"
-gtxna 1 ApplicationArgs 2
-app_global_put
 byte "SharesAssetId"
-gtxna 1 ApplicationArgs 3
+gtxna 1 ApplicationArgs 2
 btoi
 app_global_put
 byte "FundsAssetId"
-gtxna 1 ApplicationArgs 4
+gtxna 1 ApplicationArgs 3
 btoi
 app_global_put
 byte "DaoName"
-gtxna 1 ApplicationArgs 5
+gtxna 1 ApplicationArgs 4
 app_global_put
 byte "DaoDesc"
-gtxna 1 ApplicationArgs 6
+gtxna 1 ApplicationArgs 5
 app_global_put
 byte "SharePrice"
-gtxna 1 ApplicationArgs 7
+gtxna 1 ApplicationArgs 6
 btoi
 app_global_put
 byte "InvestorsPart"
-gtxna 1 ApplicationArgs 8
+gtxna 1 ApplicationArgs 7
 btoi
 app_global_put
 byte "LogoUrl"
-gtxna 1 ApplicationArgs 9
+gtxna 1 ApplicationArgs 8
 app_global_put
 byte "SocialMediaUrl"
-gtxna 1 ApplicationArgs 10
+gtxna 1 ApplicationArgs 9
 app_global_put
 byte "Owner"
-gtxna 1 ApplicationArgs 11
+gtxna 1 ApplicationArgs 10
 app_global_put
 byte "Versions"
-gtxna 1 ApplicationArgs 12
+gtxna 1 ApplicationArgs 11
 app_global_put
 itxn_begin
 int axfer
@@ -693,6 +671,18 @@ itxn_field AssetReceiver
 int 0
 itxn_field AssetAmount
 gtxna 1 Assets 0
+itxn_field XferAsset
+int 0
+itxn_field Fee
+itxn_submit
+itxn_begin
+int axfer
+itxn_field TypeEnum
+global CurrentApplicationAddress
+itxn_field AssetReceiver
+int 0
+itxn_field AssetAmount
+gtxna 1 Assets 1
 itxn_field XferAsset
 int 0
 itxn_field Fee
