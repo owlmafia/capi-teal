@@ -2,33 +2,68 @@
 gtxn 0 ApplicationID
 int 0
 ==
-bnz main_l14
-gtxn 0 OnCompletion
-int 4
-==
-bnz main_l13
 global GroupSize
 int 1
 ==
-bnz main_l12
+&&
+bnz main_l16
+gtxna 0 ApplicationArgs 0
+byte "optin"
+==
+bnz main_l15
+gtxna 0 ApplicationArgs 0
+byte "update"
+==
+bnz main_l14
 gtxna 0 ApplicationArgs 0
 byte "claim"
 ==
-bnz main_l11
+bnz main_l13
 gtxna 0 ApplicationArgs 0
 byte "lock"
 ==
-bnz main_l10
+bnz main_l12
 gtxna 0 ApplicationArgs 0
 byte "unlock"
 ==
-bnz main_l9
+bnz main_l11
 gtxna 0 ApplicationArgs 0
 byte "drain"
 ==
-bnz main_l8
+bnz main_l10
+gtxna 0 ApplicationArgs 0
+byte "setup"
+==
+bnz main_l9
 err
-main_l8:
+main_l9:
+itxn_begin
+int axfer
+itxn_field TypeEnum
+global CurrentApplicationAddress
+itxn_field AssetReceiver
+int 0
+itxn_field AssetAmount
+int TMPL_FUNDS_ASSET_ID
+itxn_field XferAsset
+int 0
+itxn_field Fee
+itxn_submit
+itxn_begin
+int axfer
+itxn_field TypeEnum
+global CurrentApplicationAddress
+itxn_field AssetReceiver
+int 0
+itxn_field AssetAmount
+int TMPL_CAPI_ASSET_ID
+itxn_field XferAsset
+int 0
+itxn_field Fee
+itxn_submit
+int 1
+return
+main_l10:
 global GroupSize
 int 4
 ==
@@ -85,9 +120,9 @@ gtxn 3 AssetAmount
 app_global_put
 int 1
 return
-main_l9:
+main_l11:
 global GroupSize
-int 2
+int 1
 ==
 assert
 gtxn 0 TypeEnum
@@ -102,31 +137,23 @@ gtxn 0 OnCompletion
 int CloseOut
 ==
 assert
-gtxn 0 Sender
-gtxn 1 AssetReceiver
-==
-assert
-gtxn 1 TypeEnum
+itxn_begin
 int axfer
-==
-assert
-gtxn 1 XferAsset
-int TMPL_CAPI_ASSET_ID
-==
-assert
-gtxn 1 AssetAmount
-int 0
->
-assert
-gtxn 1 AssetAmount
+itxn_field TypeEnum
+gtxn 0 Sender
+itxn_field AssetReceiver
 gtxn 0 Sender
 byte "Shares"
 app_local_get
-==
-assert
+itxn_field AssetAmount
+int TMPL_CAPI_ASSET_ID
+itxn_field XferAsset
+int 0
+itxn_field Fee
+itxn_submit
 int 1
 return
-main_l10:
+main_l12:
 global GroupSize
 int 2
 ==
@@ -153,6 +180,10 @@ int axfer
 assert
 gtxn 1 XferAsset
 int TMPL_CAPI_ASSET_ID
+==
+assert
+gtxn 1 AssetReceiver
+global CurrentApplicationAddress
 ==
 assert
 gtxn 1 AssetAmount
@@ -194,7 +225,11 @@ app_local_get
 app_local_put
 int 1
 return
-main_l11:
+main_l13:
+global GroupSize
+int 1
+==
+assert
 gtxn 0 TypeEnum
 int appl
 ==
@@ -207,22 +242,9 @@ gtxn 0 OnCompletion
 int NoOp
 ==
 assert
-gtxn 0 Sender
-gtxn 1 AssetReceiver
-==
-assert
-gtxn 1 TypeEnum
+itxn_begin
 int axfer
-==
-assert
-gtxn 1 AssetAmount
-int 0
->
-assert
-gtxn 1 XferAsset
-int TMPL_FUNDS_ASSET_ID
-==
-assert
+itxn_field TypeEnum
 gtxn 0 Sender
 byte "Shares"
 app_local_get
@@ -239,35 +261,38 @@ gtxn 0 Sender
 byte "ClaimedTotal"
 app_local_get
 -
-gtxn 1 AssetAmount
->=
-assert
+itxn_field AssetAmount
+gtxn 0 Sender
+itxn_field AssetReceiver
+int TMPL_FUNDS_ASSET_ID
+itxn_field XferAsset
+itxn_submit
 gtxn 0 Sender
 byte "ClaimedTotal"
 gtxn 0 Sender
 byte "ClaimedTotal"
 app_local_get
-gtxn 1 AssetAmount
+gtxn 0 Sender
+byte "Shares"
+app_local_get
+int TMPL_PRECISION
+*
+int TMPL_SHARE_SUPPLY
+/
+byte "ReceivedTotal"
+app_global_get
+*
+int TMPL_PRECISION
+/
+gtxn 0 Sender
+byte "ClaimedTotal"
+app_local_get
+-
 +
 app_local_put
 int 1
 return
-main_l12:
-gtxn 0 TypeEnum
-int appl
-==
-assert
-gtxn 0 ApplicationID
-global CurrentApplicationID
-==
-assert
-gtxn 0 OnCompletion
-int OptIn
-==
-assert
-int 1
-return
-main_l13:
+main_l14:
 global GroupSize
 int 1
 ==
@@ -282,7 +307,22 @@ addr TMPL_CAPI_OWNER
 assert
 int 1
 return
-main_l14:
+main_l15:
+gtxn 0 TypeEnum
+int appl
+==
+assert
+gtxn 0 ApplicationID
+global CurrentApplicationID
+==
+assert
+gtxn 0 OnCompletion
+int OptIn
+==
+assert
+int 1
+return
+main_l16:
 gtxn 0 TypeEnum
 int appl
 ==

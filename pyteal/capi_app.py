@@ -10,7 +10,7 @@ tmpl_precision_square = Tmpl.Int("TMPL_PRECISION_SQUARE")
 tmpl_capi_share = Tmpl.Int("TMPL_CAPI_SHARE")
 tmpl_investors_share = Tmpl.Int("TMPL_INVESTORS_SHARE")
 tmpl_share_supply = Tmpl.Int("TMPL_SHARE_SUPPLY")
-tmpl_funds_asset_id = Tmpl.Int("TMPL_FUNDS_ASSET_ID")
+tmpl_funds_asset_id = Tmpl.Int("TMPL_FUNDS_ASSET_ID") # TODO consider global state (like in the dao app)
 tmpl_capi_asset_id = Tmpl.Int("TMPL_CAPI_ASSET_ID")
 tmpl_owner = Tmpl.Addr("TMPL_CAPI_OWNER")
 
@@ -22,6 +22,32 @@ LOCAL_SHARES = "Shares"
 def approval_program():
     handle_create = Seq(
         Assert(Gtxn[0].type_enum() == TxnType.ApplicationCall),
+
+        Approve()
+    )
+
+    handle_setup = Seq(
+        InnerTxnBuilder.Begin(),
+        # optin to funds asset
+        InnerTxnBuilder.SetFields({
+            TxnField.type_enum: TxnType.AssetTransfer,
+            TxnField.asset_receiver: Global.current_application_address(),
+            TxnField.asset_amount: Int(0),
+            TxnField.xfer_asset: tmpl_funds_asset_id,
+            TxnField.fee: Int(0)
+        }),
+        InnerTxnBuilder.Submit(),
+        InnerTxnBuilder.Begin(), # TODO Next() -> Teal 6
+        # optin to capi asset
+        InnerTxnBuilder.SetFields({
+            TxnField.type_enum: TxnType.AssetTransfer,
+            TxnField.asset_receiver: Global.current_application_address(),
+            TxnField.asset_amount: Int(0),
+            TxnField.xfer_asset: tmpl_capi_asset_id,
+            TxnField.fee: Int(0)
+        }), 
+        InnerTxnBuilder.Submit(),
+
         Approve()
     )
 
@@ -54,23 +80,25 @@ def approval_program():
 
     # Calculates entitled dividend based on LOCAL_SHARES and LOCAL_CLAIMED_TOTAL.
     # Expects claimer to be the gtxn 0 sender. 
-    entitled_dividend = Minus(total_entitled_dividend, App.localGet(Gtxn[0].sender(), Bytes(LOCAL_CLAIMED_TOTAL)))
-    wants_to_claim_less_or_eq_to_entitled_amount = Ge(entitled_dividend, Gtxn[1].asset_amount())
+    claimable_dividend = Minus(total_entitled_dividend, App.localGet(Gtxn[0].sender(), Bytes(LOCAL_CLAIMED_TOTAL)))
 
     handle_claim = Seq(
-        # app call to verify and set dividend
+        Assert(Global.group_size() == Int(1)),
+
+        # app call
         Assert(Gtxn[0].type_enum() == TxnType.ApplicationCall),
         Assert(Gtxn[0].application_id() == Global.current_application_id()),
         Assert(Gtxn[0].on_completion() == OnComplete.NoOp),
-        Assert(Gtxn[0].sender() == Gtxn[1].asset_receiver()), # app caller is dividend receiver 
 
-        # xfer to transfer dividend to investor
-        Assert(Gtxn[1].type_enum() == TxnType.AssetTransfer),
-        Assert(Gtxn[1].asset_amount() > Int(0)),
-        Assert(Gtxn[1].xfer_asset() == tmpl_funds_asset_id), # the claimed asset is the funds asset 
-
-        # verify dividend amount is correct
-        Assert(wants_to_claim_less_or_eq_to_entitled_amount),
+        # send dividend to caller
+        InnerTxnBuilder.Begin(),
+        InnerTxnBuilder.SetFields({
+            TxnField.type_enum: TxnType.AssetTransfer,
+            TxnField.asset_amount: claimable_dividend,
+            TxnField.asset_receiver: Gtxn[0].sender(),
+            TxnField.xfer_asset: tmpl_funds_asset_id,
+        }),
+        InnerTxnBuilder.Submit(),
 
         # update local state with retrieved dividend
         App.localPut(
@@ -78,7 +106,7 @@ def approval_program():
             Bytes(LOCAL_CLAIMED_TOTAL), 
             Add(
                 App.localGet(Gtxn[0].sender(), Bytes(LOCAL_CLAIMED_TOTAL)), 
-                Gtxn[1].asset_amount()
+                claimable_dividend
             )
         ),
 
@@ -86,22 +114,27 @@ def approval_program():
     )
 
     handle_unlock = Seq(
-        Assert(Global.group_size() == Int(2)),
+        Assert(Global.group_size() == Int(1)),
 
         # app call to opt-out
         Assert(Gtxn[0].type_enum() == TxnType.ApplicationCall),
         Assert(Gtxn[0].application_id() == Global.current_application_id()),
         Assert(Gtxn[0].on_completion() == OnComplete.CloseOut),
-        Assert(Gtxn[0].sender() == Gtxn[1].asset_receiver()), # app caller is receiving the shares
 
-        # xfer to get the capi assets
-        Assert(Gtxn[1].type_enum() == TxnType.AssetTransfer),
-        Assert(Gtxn[1].xfer_asset() == tmpl_capi_asset_id),
-        Assert(Gtxn[1].asset_amount() > Int(0)),
-        Assert(Gtxn[1].asset_amount() == App.localGet(Gtxn[0].sender(), Bytes(LOCAL_SHARES))), # unlocked amount == owned shares
+        # shares xfer to the investor
+        InnerTxnBuilder.Begin(),
+        InnerTxnBuilder.SetFields({
+            TxnField.type_enum: TxnType.AssetTransfer,
+            TxnField.asset_receiver: Gtxn[0].sender(),
+            TxnField.asset_amount: App.localGet(Gtxn[0].sender(), Bytes(LOCAL_SHARES)),
+            TxnField.xfer_asset: tmpl_capi_asset_id,
+            TxnField.fee: Int(0)
+        }),
+        InnerTxnBuilder.Submit(),
+
         Approve()
     )
-   
+
     handle_lock = Seq(
         Assert(Global.group_size() == Int(2)),
 
@@ -114,6 +147,7 @@ def approval_program():
         # send capi assets to capi escrow
         Assert(Gtxn[1].type_enum() == TxnType.AssetTransfer),
         Assert(Gtxn[1].xfer_asset() == tmpl_capi_asset_id),
+        Assert(Gtxn[1].asset_receiver() == Global.current_application_address()),
         Assert(Gtxn[1].asset_amount() > Int(0)),
 
         # set / increment share count local state
@@ -134,7 +168,7 @@ def approval_program():
             # meaning that investors may lose pending dividend by buying or locking new shares
             # TODO improve? - a non TEAL way could be to just automatically retrieve pending dividend in the same group 
             # see more notes in old repo
-            entitled_dividend
+            claimable_dividend
             # Gtxn[1].asset_amount()
         ),
 
@@ -182,13 +216,14 @@ def approval_program():
     )
     
     program = Cond(
-        [Gtxn[0].application_id() == Int(0), handle_create],
-        [Gtxn[0].on_completion() == Int(4), handle_update],
-        [Global.group_size() == Int(1), handle_optin],
+        [And(Gtxn[0].application_id() == Int(0), Global.group_size() == Int(1)), handle_create],
+        [Gtxn[0].application_args[0] == Bytes("optin"), handle_optin],
+        [Gtxn[0].application_args[0] == Bytes("update"), handle_update],
         [Gtxn[0].application_args[0] == Bytes("claim"), handle_claim],
         [Gtxn[0].application_args[0] == Bytes("lock"), handle_lock],
         [Gtxn[0].application_args[0] == Bytes("unlock"), handle_unlock],
         [Gtxn[0].application_args[0] == Bytes("drain"), handle_drain],
+        [Gtxn[0].application_args[0] == Bytes("setup"), handle_setup],
     )
 
     return compileTeal(program, Mode.Application, version=5)

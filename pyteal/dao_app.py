@@ -204,17 +204,17 @@ def approval_program():
     handle_claim = Seq(
         Assert(Global.group_size() == Int(1)),
 
-        # app call to verify and set dividend
+        # app call
         Assert(Gtxn[0].type_enum() == TxnType.ApplicationCall),
         Assert(Gtxn[0].application_id() == Global.current_application_id()),
         Assert(Gtxn[0].on_completion() == OnComplete.NoOp),
-               
 
+        # send dividend to caller
         InnerTxnBuilder.Begin(),
         InnerTxnBuilder.SetFields({
             TxnField.type_enum: TxnType.AssetTransfer,
             TxnField.asset_amount: claimable_dividend,
-            TxnField.asset_receiver: Txn.sender(),
+            TxnField.asset_receiver: Gtxn[0].sender(),
             TxnField.xfer_asset: App.globalGet(Bytes(GLOBAL_FUNDS_ASSET_ID)),
         }),
         InnerTxnBuilder.Submit(),
