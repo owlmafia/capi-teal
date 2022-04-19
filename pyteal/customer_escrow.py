@@ -12,27 +12,14 @@ LOCAL_SHARES = "Shares"
 
 def program():
     handle_setup_dao = Seq(
-        # creator sends min balance to app address
-        Assert(Gtxn[0].type_enum() == TxnType.Payment),
-        Assert(Gtxn[0].receiver() == tmpl_app_escrow_address),
-        
         # app call
         Assert(Gtxn[1].type_enum() == TxnType.ApplicationCall),
         Assert(Gtxn[1].application_id() == tmpl_central_app_id),
         Assert(Gtxn[1].on_completion() == OnComplete.NoOp),
-        Assert(Gtxn[1].application_args.length() == Int(11)),
-
-        # creator sends min balance to customer escrow
-        Assert(Gtxn[2].type_enum() == TxnType.Payment),
-        Assert(Gtxn[2].receiver() == Gtxn[1].application_args[0]),
 
         # customer escrow opt-ins to funds asset
         Assert(Gtxn[3].type_enum() == TxnType.AssetTransfer),
         Assert(Gtxn[3].asset_amount() == Int(0)),
-
-        # creator transfers shares to app escrow
-        Assert(Gtxn[4].type_enum() == TxnType.AssetTransfer),
-        Assert(Gtxn[4].xfer_asset() == Btoi(Gtxn[1].application_args[1])),
 
         Approve()
     )

@@ -80,14 +80,6 @@ assert
 int 1
 return
 main_l4:
-gtxn 0 TypeEnum
-int pay
-==
-assert
-gtxn 0 Receiver
-addr TMPL_APP_ESCROW_ADDRESS
-==
-assert
 gtxn 1 TypeEnum
 int appl
 ==
@@ -100,33 +92,12 @@ gtxn 1 OnCompletion
 int NoOp
 ==
 assert
-gtxn 1 NumAppArgs
-int 11
-==
-assert
-gtxn 2 TypeEnum
-int pay
-==
-assert
-gtxn 2 Receiver
-gtxna 1 ApplicationArgs 0
-==
-assert
 gtxn 3 TypeEnum
 int axfer
 ==
 assert
 gtxn 3 AssetAmount
 int 0
-==
-assert
-gtxn 4 TypeEnum
-int axfer
-==
-assert
-gtxn 4 XferAsset
-gtxna 1 ApplicationArgs 1
-btoi
 ==
 assert
 int 1
