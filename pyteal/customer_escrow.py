@@ -59,7 +59,7 @@ def program():
         [Gtxn[0].application_args[0] == Bytes("drain"), handle_drain],
     )
 
-    return compileTeal(program, Mode.Signature, version=5)
+    return compileTeal(program, Mode.Signature, version=6)
 
 path = 'teal_template/customer_escrow.teal'
 with open(path, 'w') as f:

@@ -108,9 +108,7 @@ def approval_program():
             TxnField.xfer_asset: Gtxn[1].assets[0],
             TxnField.fee: Int(0)
         }),
-        InnerTxnBuilder.Submit(),
-
-        InnerTxnBuilder.Begin(), # TODO Next() -> Teal 6
+        InnerTxnBuilder.Next(),
         # optin to shares asset
         InnerTxnBuilder.SetFields({
             TxnField.type_enum: TxnType.AssetTransfer,
@@ -175,14 +173,13 @@ def approval_program():
             TxnField.xfer_asset: App.globalGet(Bytes(GLOBAL_SHARES_ASSET_ID)),
             TxnField.fee: Int(0)
         }),
+        InnerTxnBuilder.Submit(),
 
         # decrement locked shares global state
         App.globalPut(
             Bytes(GLOBAL_LOCKED_SHARES), 
             Minus(App.globalGet(Bytes(GLOBAL_LOCKED_SHARES)), App.localGet(Gtxn[0].sender(), Bytes(LOCAL_SHARES)))
         ),
-
-        InnerTxnBuilder.Submit(),
 
         Approve()
     )
@@ -431,10 +428,10 @@ def approval_program():
         [Gtxn[0].application_args[0] == Bytes("withdraw"), handle_withdrawal],
     )
 
-    return compileTeal(program, Mode.Application, version=5)
+    return compileTeal(program, Mode.Application, version=6)
 
 def clear_program():
-    return compileTeal(Int(1), Mode.Application, version=5)
+    return compileTeal(Int(1), Mode.Application, version=6)
  
 def export(path, output):
    with open(path, "w") as f:

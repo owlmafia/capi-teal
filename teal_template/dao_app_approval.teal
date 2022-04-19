@@ -1,4 +1,4 @@
-#pragma version 5
+#pragma version 6
 global GroupSize
 int 5
 ==
@@ -360,6 +360,7 @@ app_global_get
 itxn_field XferAsset
 int 0
 itxn_field Fee
+itxn_submit
 byte "LockedShares"
 byte "LockedShares"
 app_global_get
@@ -368,7 +369,6 @@ byte "Shares"
 app_local_get
 -
 app_global_put
-itxn_submit
 int 1
 return
 main_l18:
@@ -593,8 +593,7 @@ gtxna 1 Assets 0
 itxn_field XferAsset
 int 0
 itxn_field Fee
-itxn_submit
-itxn_begin
+itxn_next
 int axfer
 itxn_field TypeEnum
 global CurrentApplicationAddress

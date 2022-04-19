@@ -36,8 +36,7 @@ def approval_program():
             TxnField.xfer_asset: tmpl_funds_asset_id,
             TxnField.fee: Int(0)
         }),
-        InnerTxnBuilder.Submit(),
-        InnerTxnBuilder.Begin(), # TODO Next() -> Teal 6
+        InnerTxnBuilder.Next(),
         # optin to capi asset
         InnerTxnBuilder.SetFields({
             TxnField.type_enum: TxnType.AssetTransfer,
@@ -226,10 +225,10 @@ def approval_program():
         [Gtxn[0].application_args[0] == Bytes("setup"), handle_setup],
     )
 
-    return compileTeal(program, Mode.Application, version=5)
+    return compileTeal(program, Mode.Application, version=6)
 
 def clear_program():
-    return compileTeal(Int(1), Mode.Application, version=5)
+    return compileTeal(Int(1), Mode.Application, version=6)
  
 def export(path, output):
    with open(path, "w") as f:
