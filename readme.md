@@ -6,7 +6,7 @@ Involved assets:
 
 # DAO contracts
 
-## dao_app_approval
+## dao_app.py
 
 Contains the DAO's state. 
 
@@ -14,35 +14,28 @@ Notes:
 - When investors lock shares, the "already claimed" local state is set to how much they'd be entitled based on their current holdings. This way they can claim dividend only for future income.
 - Unlocking shares opts out investors from the app. Partial unlocking is not possible (all the shares have to be unlocked). Partial locking is possible (the locked shares are incremented).
 
-## Dao escrow
+**App escrow**
 
 Holds the DAO's funds. Flows:
+
 1) Drain: retrieves the funds from customer_escrow. This is necessary to set the DAO's `GLOBAL_RECEIVED_TOTAL` global state, used to calculate the claimable dividend for the investors. Anyone can trigger this. This flow also sends the Capi fee ("global dividend") to capi_escrow.
 
-2) Investing: When users buy shares, the payment (xfer) goes to this escrow.
+2) Investing: The shares for sale are sent to this escrow when creating the DAOs. When users buy shares, the payment is sent to this escrow, and the bought shares become "locked" (via local and global state).
 
 3) Withdrawing: The DAO owner withdraws funds (e.g. to pay for company's expenses). The DAO owner can withdraw all the funds, emptying the escrow and preventing investors from claiming their dividend. This is intended, for now.
 
-4) Locking / unlocking: The investors lock shares here to be entitled to the dividend.
+4) Locking / unlocking: Investors lock shares here to be entitled to the dividend. Investors can unlock the shares (transfer them to themselves) by opting-out of the app.
 
-## customer_escrow
+## customer_escrow.py
 
 This is where DAO's customers send payments. It can only send funds to the DAO's escrow.
 
-## investing_escrow
-
-Contains the logic to sell shares (swap shares with funds asset). The DAO owner sends the shares here when creating the project. Checks that the correct funds amount is sent to the DAO's escrow.
-
-Not sure that this should be a contract account. Maybe a delegated lsig is better.
-
-It may also be possible to merge this with the DAO's escrow, now sure that a separate escrow is necessary.
-
 # Capi contracts
 
-## capi_app_approval
+## capi_app.py
 
 Analogous to dao_app_approval but for $capi holders and the global dividend.
 
-## capi_escrow
+**App escrow**
 
 Collects the platform's fees / dividend for $capi holders.
