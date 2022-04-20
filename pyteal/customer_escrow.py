@@ -24,6 +24,7 @@ def program():
         Approve()
     )
 
+    # TODO are the 2x checks with the app meaningful, maybe if the app has bugs
     handle_drain = Seq(
         Assert(Global.group_size() == Int(4)),
 
@@ -31,6 +32,7 @@ def program():
         Assert(Gtxn[0].type_enum() == TxnType.ApplicationCall),
         Assert(Gtxn[0].on_completion() == OnComplete.NoOp),
         Assert(Gtxn[0].sender() == Gtxn[1].sender()), # same user is calling both apps
+        Assert(Gtxn[0].application_id() == tmpl_central_app_id),
 
         # call capi app to update state
         Assert(Gtxn[1].type_enum() == TxnType.ApplicationCall),

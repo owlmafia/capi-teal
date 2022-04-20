@@ -25,6 +25,10 @@ gtxn 0 Sender
 gtxn 1 Sender
 ==
 assert
+gtxn 0 ApplicationID
+int TMPL_CENTRAL_APP_ID
+==
+assert
 gtxn 1 TypeEnum
 int appl
 ==
