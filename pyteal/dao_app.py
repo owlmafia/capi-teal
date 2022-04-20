@@ -10,7 +10,6 @@ tmpl_capi_share = Tmpl.Int("TMPL_CAPI_SHARE")
 tmpl_precision_square = Tmpl.Int("TMPL_PRECISION_SQUARE")
 tmpl_investors_share = Tmpl.Int("TMPL_INVESTORS_SHARE")
 tmpl_share_supply = Tmpl.Int("TMPL_SHARE_SUPPLY")
-tmpl_owner = Tmpl.Addr("TMPL_OWNER")
 
 GLOBAL_RECEIVED_TOTAL = "CentralReceivedTotal"
 
@@ -29,7 +28,9 @@ GLOBAL_INVESTORS_PART = "InvestorsPart"
 GLOBAL_LOGO_URL = "LogoUrl"
 GLOBAL_SOCIAL_MEDIA_URL = "SocialMediaUrl"
 
-# not sure this is needed
+# Can be different from creator (usually when using a multisig), 
+# for UX reasons: creator can create easily the DAO with single sig
+# and configure the multisig for future actions 
 GLOBAL_OWNER = "Owner"
 
 GLOBAL_VERSIONS = "Versions"
@@ -49,7 +50,7 @@ def approval_program():
         Assert(Global.group_size() == Int(1)),
 
         Assert(Gtxn[0].type_enum() == TxnType.ApplicationCall), 
-        Assert(Gtxn[0].sender() == tmpl_owner), 
+        Assert(Gtxn[0].sender() == App.globalGet(Bytes(GLOBAL_OWNER))), 
         
         Approve()
     )
@@ -64,6 +65,7 @@ def approval_program():
         Assert(Gtxn[1].application_id() == Global.current_application_id()),
         Assert(Gtxn[1].on_completion() == OnComplete.NoOp),
         Assert(Gtxn[1].application_args.length() == Int(11)),
+        Assert(Gtxn[1].sender() == Global.creator_address()),
 
         # creator sends min balance to customer escrow
         Assert(Gtxn[2].type_enum() == TxnType.Payment),
@@ -131,6 +133,7 @@ def approval_program():
         Assert(Gtxn[0].application_id() == Global.current_application_id()),
         Assert(Gtxn[0].on_completion() == OnComplete.NoOp),
         Assert(Gtxn[0].application_args.length() == Int(9)),
+        Assert(Gtxn[0].sender() == App.globalGet(Bytes(GLOBAL_OWNER))), 
 
         # update data
         App.globalPut(Bytes(GLOBAL_CUSTOMER_ESCROW_ADDRESS), Gtxn[0].application_args[1]),
@@ -400,7 +403,7 @@ def approval_program():
 
         # only the owner can withdraw
 
-        Assert(Gtxn[0].sender() == tmpl_owner),
+        Assert(Gtxn[0].sender() == App.globalGet(Bytes(GLOBAL_OWNER))),
 
         InnerTxnBuilder.Begin(),
         InnerTxnBuilder.SetFields({

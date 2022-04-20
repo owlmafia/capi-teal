@@ -50,7 +50,8 @@ int 1
 ==
 assert
 gtxn 0 Sender
-addr TMPL_OWNER
+byte "Owner"
+app_global_get
 ==
 assert
 itxn_begin
@@ -86,6 +87,11 @@ int NoOp
 assert
 gtxn 0 NumAppArgs
 int 9
+==
+assert
+gtxn 0 Sender
+byte "Owner"
+app_global_get
 ==
 assert
 byte "CustomerEscrowAddress"
@@ -484,7 +490,8 @@ int appl
 ==
 assert
 gtxn 0 Sender
-addr TMPL_OWNER
+byte "Owner"
+app_global_get
 ==
 assert
 int 1
@@ -512,6 +519,10 @@ int NoOp
 assert
 gtxn 1 NumAppArgs
 int 11
+==
+assert
+gtxn 1 Sender
+global CreatorAddress
 ==
 assert
 gtxn 2 TypeEnum
