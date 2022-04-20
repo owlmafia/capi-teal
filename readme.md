@@ -26,6 +26,10 @@ Holds the DAO's funds. Flows:
 
 4) Locking / unlocking: Investors lock shares here to be entitled to the dividend. Investors can unlock the shares (transfer them to themselves) by opting-out of the app.
 
+**Ownership**
+
+DAOs can be created by a single account (basic signature). During creation, they can optionally enter a different address as owner, which will be authorized to withdraw funds, update the DAO's smart contracts and data. This allows to configure a multisig while keeping the DAO creation flow simple.
+
 ## customer_escrow.py
 
 This is where DAO's customers send payments. It can only send funds to the DAO's escrow.
