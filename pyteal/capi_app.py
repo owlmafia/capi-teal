@@ -26,6 +26,8 @@ def approval_program():
     )
 
     handle_setup = Seq(
+        Assert(Gtxn[0].sender() == Global.creator_address()), 
+
         InnerTxnBuilder.Begin(),
         # optin to funds asset
         InnerTxnBuilder.SetFields({
@@ -51,6 +53,8 @@ def approval_program():
 
     handle_update = Seq(
         Assert(Global.group_size() == Int(1)),
+        
+        Assert(Gtxn[0].sender() == Global.creator_address()), 
 
         Assert(Gtxn[0].type_enum() == TxnType.ApplicationCall), 
         Assert(Gtxn[0].sender() == Global.creator_address()), 

@@ -37,6 +37,10 @@ byte "setup"
 bnz main_l9
 err
 main_l9:
+gtxn 0 Sender
+global CreatorAddress
+==
+assert
 itxn_begin
 int axfer
 itxn_field TypeEnum
@@ -294,6 +298,10 @@ return
 main_l14:
 global GroupSize
 int 1
+==
+assert
+gtxn 0 Sender
+global CreatorAddress
 ==
 assert
 gtxn 0 TypeEnum
