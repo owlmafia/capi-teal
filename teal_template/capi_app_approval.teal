@@ -301,7 +301,7 @@ int appl
 ==
 assert
 gtxn 0 Sender
-addr TMPL_CAPI_OWNER
+global CreatorAddress
 ==
 assert
 int 1

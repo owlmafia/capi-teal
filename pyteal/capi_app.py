@@ -12,7 +12,6 @@ tmpl_investors_share = Tmpl.Int("TMPL_INVESTORS_SHARE")
 tmpl_share_supply = Tmpl.Int("TMPL_SHARE_SUPPLY")
 tmpl_funds_asset_id = Tmpl.Int("TMPL_FUNDS_ASSET_ID") # TODO consider global state (like in the dao app)
 tmpl_capi_asset_id = Tmpl.Int("TMPL_CAPI_ASSET_ID")
-tmpl_owner = Tmpl.Addr("TMPL_CAPI_OWNER")
 
 GLOBAL_RECEIVED_TOTAL = "ReceivedTotal"
 LOCAL_CLAIMED_TOTAL = "ClaimedTotal"
@@ -54,7 +53,7 @@ def approval_program():
         Assert(Global.group_size() == Int(1)),
 
         Assert(Gtxn[0].type_enum() == TxnType.ApplicationCall), 
-        Assert(Gtxn[0].sender() == tmpl_owner), 
+        Assert(Gtxn[0].sender() == Global.creator_address()), 
         
         Approve()
     )
