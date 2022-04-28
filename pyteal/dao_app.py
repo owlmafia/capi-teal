@@ -23,7 +23,10 @@ GLOBAL_LOCKED_SHARES = "LockedShares"
 GLOBAL_DAO_NAME = "DaoName"
 GLOBAL_DAO_DESC = "DaoDesc"
 GLOBAL_SHARE_PRICE = "SharePrice"
+# % of income directed to investors
 GLOBAL_INVESTORS_PART = "InvestorsPart"
+# supply offered to investors (doesn't really have to be stored - TODO refactor app to remove this)
+GLOBAL_SHARES_FOR_INVESTORS = "SharesForInvestors"
 
 GLOBAL_LOGO_URL = "LogoUrl"
 GLOBAL_SOCIAL_MEDIA_URL = "SocialMediaUrl"
@@ -64,7 +67,7 @@ def approval_program():
         Assert(Gtxn[1].type_enum() == TxnType.ApplicationCall),
         Assert(Gtxn[1].application_id() == Global.current_application_id()),
         Assert(Gtxn[1].on_completion() == OnComplete.NoOp),
-        Assert(Gtxn[1].application_args.length() == Int(11)),
+        Assert(Gtxn[1].application_args.length() == Int(12)),
         Assert(Gtxn[1].sender() == Global.creator_address()),
 
         # creator sends min balance to customer escrow
@@ -75,7 +78,7 @@ def approval_program():
         Assert(Gtxn[3].type_enum() == TxnType.AssetTransfer),
         Assert(Gtxn[3].asset_amount() == Int(0)),
 
-        # creator transfers shares to app escrow
+        # creator transfers shares (to be sold to investors) to app escrow
         Assert(Gtxn[4].type_enum() == TxnType.AssetTransfer),
         Assert(Gtxn[4].xfer_asset() == Btoi(Gtxn[1].application_args[1])),
 
@@ -100,6 +103,8 @@ def approval_program():
 
         App.globalPut(Bytes(GLOBAL_VERSIONS), Gtxn[1].application_args[10]),
 
+        App.globalPut(Bytes(GLOBAL_SHARES_FOR_INVESTORS), Btoi(Gtxn[1].application_args[11])),
+
         InnerTxnBuilder.Begin(),
         # optin to funds asset
         InnerTxnBuilder.SetFields({
@@ -121,6 +126,8 @@ def approval_program():
             TxnField.fee: Int(0)
         }), 
         InnerTxnBuilder.Submit(),
+
+        Assert(Gtxn[4].xfer_asset() == App.globalGet(Bytes(GLOBAL_SHARES_ASSET_ID))),
 
         Approve()
     )
