@@ -2,7 +2,6 @@ Involved assets:
 
 1) Funds asset: An ASA specified when creating the DAO in which the funds will be managed. Expected to be a stable coin normally.
 2) DAO shares: An ASA that represents DAO shares, locking shares entitles investors to a proportional share of the DAO's income (more exactly a share of a funds % dedicated to investors, defined by the DAO owner).
-3) \$CAPI: Works similarly to the DAO shares, but for the whole platform: locking \$CAPI entitles the holders to a % of the platform's fees.
 
 # DAO contracts
 
@@ -33,13 +32,3 @@ DAOs can be created by a single account (basic signature). During creation, they
 ## customer_escrow.py
 
 This is where DAO's customers send payments. It can only send funds to the DAO's escrow.
-
-# Capi contracts
-
-## capi_app.py
-
-Analogous to dao_app_approval but for $capi holders and the global dividend.
-
-**App escrow**
-
-Collects the platform's fees / dividend for $capi holders.
