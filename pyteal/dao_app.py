@@ -30,6 +30,10 @@ GLOBAL_SHARES_FOR_INVESTORS = "SharesForInvestors"
 GLOBAL_LOGO_URL = "LogoUrl"
 GLOBAL_SOCIAL_MEDIA_URL = "SocialMediaUrl"
 
+GLOBAL_TARGET = "Target"
+GLOBAL_TARGET_END_DATE = "TargetEndDate"
+GLOBAL_RAISED = "Raised"
+
 # Can be different from creator (usually when using a multisig), 
 # for UX reasons: creator can create easily the DAO with single sig
 # and configure the multisig for future actions 
@@ -66,7 +70,7 @@ def approval_program():
         Assert(Gtxn[1].type_enum() == TxnType.ApplicationCall),
         Assert(Gtxn[1].application_id() == Global.current_application_id()),
         Assert(Gtxn[1].on_completion() == OnComplete.NoOp),
-        Assert(Gtxn[1].application_args.length() == Int(12)),
+        Assert(Gtxn[1].application_args.length() == Int(14)),
         Assert(Gtxn[1].sender() == Global.creator_address()),
 
         # creator sends min balance to customer escrow
@@ -104,6 +108,11 @@ def approval_program():
 
         App.globalPut(Bytes(GLOBAL_SHARES_FOR_INVESTORS), Btoi(Gtxn[1].application_args[11])),
 
+        App.globalPut(Bytes(GLOBAL_TARGET), Btoi(Gtxn[1].application_args[12])),
+        App.globalPut(Bytes(GLOBAL_TARGET_END_DATE), Btoi(Gtxn[1].application_args[13])),
+
+        App.globalPut(Bytes(GLOBAL_RAISED), Int(0)),
+
         InnerTxnBuilder.Begin(),
         # optin to funds asset
         InnerTxnBuilder.SetFields({
@@ -138,18 +147,19 @@ def approval_program():
         Assert(Gtxn[0].type_enum() == TxnType.ApplicationCall),
         Assert(Gtxn[0].application_id() == Global.current_application_id()),
         Assert(Gtxn[0].on_completion() == OnComplete.NoOp),
-        Assert(Gtxn[0].application_args.length() == Int(9)),
+        Assert(Gtxn[0].application_args.length() == Int(8)),
         Assert(Gtxn[0].sender() == App.globalGet(Bytes(GLOBAL_OWNER))), 
 
         # update data
         App.globalPut(Bytes(GLOBAL_CUSTOMER_ESCROW_ADDRESS), Gtxn[0].application_args[1]),
         App.globalPut(Bytes(GLOBAL_DAO_NAME), Gtxn[0].application_args[2]),
         App.globalPut(Bytes(GLOBAL_DAO_DESC), Gtxn[0].application_args[3]),
-        App.globalPut(Bytes(GLOBAL_SHARE_PRICE), Btoi(Gtxn[0].application_args[4])),
-        App.globalPut(Bytes(GLOBAL_LOGO_URL), Gtxn[0].application_args[5]),
-        App.globalPut(Bytes(GLOBAL_SOCIAL_MEDIA_URL), Gtxn[0].application_args[6]),
-        App.globalPut(Bytes(GLOBAL_OWNER), Gtxn[0].application_args[7]),
-        App.globalPut(Bytes(GLOBAL_VERSIONS), Gtxn[0].application_args[8]),
+        # for now price is immutable, simplifies funds reclaiming
+        # App.globalPut(Bytes(GLOBAL_SHARE_PRICE), Btoi(Gtxn[0].application_args[4])),
+        App.globalPut(Bytes(GLOBAL_LOGO_URL), Gtxn[0].application_args[4]),
+        App.globalPut(Bytes(GLOBAL_SOCIAL_MEDIA_URL), Gtxn[0].application_args[5]),
+        App.globalPut(Bytes(GLOBAL_OWNER), Gtxn[0].application_args[6]),
+        App.globalPut(Bytes(GLOBAL_VERSIONS), Gtxn[0].application_args[7]),
 
         # for now shares asset, funds asset and investor's part not updatable - have to think about implications
 
@@ -390,6 +400,12 @@ def approval_program():
         # (just in case for unexpected rounding issues)
         Assert(Div(Gtxn[2].asset_amount(), tmpl_share_price) == Btoi(Gtxn[1].application_args[1])),
 
+        # update total raised amount
+        App.globalPut(Bytes(GLOBAL_RAISED), Add(
+            App.globalGet(Bytes(GLOBAL_RAISED)),
+            Gtxn[2].asset_amount() 
+        )),
+
         # save shares on local state
         lock_shares(Div(Gtxn[2].asset_amount(), tmpl_share_price), Gtxn[0].sender()),
 
@@ -403,8 +419,15 @@ def approval_program():
         Assert(Global.group_size() == Int(1)),
 
         # only the owner can withdraw
-
         Assert(Gtxn[0].sender() == App.globalGet(Bytes(GLOBAL_OWNER))),
+
+        # has to be after min target end date
+        Assert(Global.latest_timestamp() > App.globalGet(Bytes(GLOBAL_TARGET_END_DATE))),
+        # the min target was met
+        # (if the target wasn't met, the project can't start and investors can reclaim their money)
+        Assert(
+            App.globalGet(Bytes(GLOBAL_RAISED)) >= App.globalGet(Bytes(GLOBAL_TARGET))
+        ),
 
         InnerTxnBuilder.Begin(),
         InnerTxnBuilder.SetFields({
@@ -415,6 +438,45 @@ def approval_program():
         }),
         InnerTxnBuilder.Submit(),
 
+        Approve()
+    )
+    
+    handle_reclaim = Seq(
+        Assert(Global.group_size() == Int(2)),
+
+        # app call
+        Assert(Gtxn[0].type_enum() == TxnType.ApplicationCall),
+        Assert(Gtxn[0].application_id() == Global.current_application_id()),
+        Assert(Gtxn[0].on_completion() == OnComplete.NoOp),
+
+        # shares being sent back
+        Assert(Gtxn[1].type_enum() == TxnType.AssetTransfer),
+        Assert(Gtxn[1].xfer_asset() == App.globalGet(Bytes(GLOBAL_SHARES_ASSET_ID))),
+        Assert(Gtxn[1].asset_receiver() == Global.current_application_address()),
+        Assert(Gtxn[1].asset_amount() > Int(0)),
+        Assert(Gtxn[1].sender() == Gtxn[0].sender()),
+
+        # reclaiming after min target end date
+        Assert(Global.latest_timestamp() > App.globalGet(Bytes(GLOBAL_TARGET_END_DATE))),
+
+        # min target wasn't met
+        Assert(
+            # NOTE that raised funds currently means only investments. 
+            # regular payments (which could be donations) sent to the app's escrow or the customer escrow are ignored here
+            # (the UI doesn't support donations (yet?), but they're of course technically possible)
+            App.globalGet(Bytes(GLOBAL_RAISED)) < App.globalGet(Bytes(GLOBAL_TARGET))
+        ),
+
+        # send paid funds back
+        InnerTxnBuilder.Begin(),
+        InnerTxnBuilder.SetFields({
+            TxnField.type_enum: TxnType.AssetTransfer,
+            TxnField.asset_amount: Gtxn[1].asset_amount() * App.globalGet(Bytes(GLOBAL_SHARE_PRICE)),
+            TxnField.asset_receiver: Gtxn[0].sender(),
+            TxnField.xfer_asset: App.globalGet(Bytes(GLOBAL_FUNDS_ASSET_ID)),
+        }),
+        InnerTxnBuilder.Submit(),
+ 
         Approve()
     )
     
@@ -433,6 +495,7 @@ def approval_program():
         [Gtxn[0].application_args[0] == Bytes("drain"), handle_drain],
         [Gtxn[0].application_args[0] == Bytes("update_data"), handle_update_data],
         [Gtxn[0].application_args[0] == Bytes("withdraw"), handle_withdrawal],
+        [Gtxn[0].application_args[0] == Bytes("reclaim"), handle_reclaim],
     )
 
     return compileTeal(program, Mode.Application, version=6)
