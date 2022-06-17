@@ -586,7 +586,7 @@ int NoOp
 ==
 assert
 gtxn 1 NumAppArgs
-int 13
+int 12
 ==
 assert
 gtxn 1 Sender
@@ -658,16 +658,12 @@ app_global_put
 byte "Versions"
 gtxna 1 ApplicationArgs 9
 app_global_put
-byte "SharesForInvestors"
+byte "Target"
 gtxna 1 ApplicationArgs 10
 btoi
 app_global_put
-byte "Target"
-gtxna 1 ApplicationArgs 11
-btoi
-app_global_put
 byte "TargetEndDate"
-gtxna 1 ApplicationArgs 12
+gtxna 1 ApplicationArgs 11
 btoi
 app_global_put
 byte "Raised"
