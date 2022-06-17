@@ -35,11 +35,6 @@ GLOBAL_TARGET = "Target"
 GLOBAL_TARGET_END_DATE = "TargetEndDate"
 GLOBAL_RAISED = "Raised"
 
-# Can be different from creator (usually when using a multisig),
-# for UX reasons: creator can create easily the DAO with single sig
-# and configure the multisig for future actions
-GLOBAL_OWNER = "Owner"
-
 GLOBAL_VERSIONS = "Versions"
 
 LOCAL_SHARES = "Shares"
@@ -58,7 +53,7 @@ def approval_program():
         Assert(Global.group_size() == Int(1)),
 
         Assert(Gtxn[0].type_enum() == TxnType.ApplicationCall),
-        Assert(Gtxn[0].sender() == App.globalGet(Bytes(GLOBAL_OWNER))),
+        Assert(Gtxn[0].sender() == Global.creator_address()),
 
         Approve()
     )
@@ -72,7 +67,7 @@ def approval_program():
         Assert(Gtxn[1].type_enum() == TxnType.ApplicationCall),
         Assert(Gtxn[1].application_id() == Global.current_application_id()),
         Assert(Gtxn[1].on_completion() == OnComplete.NoOp),
-        Assert(Gtxn[1].application_args.length() == Int(14)),
+        Assert(Gtxn[1].application_args.length() == Int(13)),
         Assert(Gtxn[1].sender() == Global.creator_address()),
 
         # creator sends min balance to customer escrow
@@ -110,17 +105,15 @@ def approval_program():
         App.globalPut(Bytes(GLOBAL_SOCIAL_MEDIA_URL),
                       Gtxn[1].application_args[8]),
 
-        App.globalPut(Bytes(GLOBAL_OWNER), Gtxn[1].application_args[9]),
-
-        App.globalPut(Bytes(GLOBAL_VERSIONS), Gtxn[1].application_args[10]),
+        App.globalPut(Bytes(GLOBAL_VERSIONS), Gtxn[1].application_args[9]),
 
         App.globalPut(Bytes(GLOBAL_SHARES_FOR_INVESTORS),
-                      Btoi(Gtxn[1].application_args[11])),
+                      Btoi(Gtxn[1].application_args[10])),
 
         App.globalPut(Bytes(GLOBAL_TARGET), Btoi(
-            Gtxn[1].application_args[12])),
+            Gtxn[1].application_args[11])),
         App.globalPut(Bytes(GLOBAL_TARGET_END_DATE),
-                      Btoi(Gtxn[1].application_args[13])),
+                      Btoi(Gtxn[1].application_args[12])),
 
         App.globalPut(Bytes(GLOBAL_RAISED), Int(0)),
 
@@ -159,8 +152,8 @@ def approval_program():
         Assert(Gtxn[0].type_enum() == TxnType.ApplicationCall),
         Assert(Gtxn[0].application_id() == Global.current_application_id()),
         Assert(Gtxn[0].on_completion() == OnComplete.NoOp),
-        Assert(Gtxn[0].application_args.length() == Int(8)),
-        Assert(Gtxn[0].sender() == App.globalGet(Bytes(GLOBAL_OWNER))),
+        Assert(Gtxn[0].application_args.length() == Int(7)),
+        Assert(Gtxn[0].sender() == Global.creator_address()),
 
         # update data
         App.globalPut(Bytes(GLOBAL_CUSTOMER_ESCROW_ADDRESS),
@@ -172,8 +165,7 @@ def approval_program():
         App.globalPut(Bytes(GLOBAL_LOGO_URL), Gtxn[0].application_args[4]),
         App.globalPut(Bytes(GLOBAL_SOCIAL_MEDIA_URL),
                       Gtxn[0].application_args[5]),
-        App.globalPut(Bytes(GLOBAL_OWNER), Gtxn[0].application_args[6]),
-        App.globalPut(Bytes(GLOBAL_VERSIONS), Gtxn[0].application_args[7]),
+        App.globalPut(Bytes(GLOBAL_VERSIONS), Gtxn[0].application_args[6]),
 
         # for now shares asset, funds asset and investor's part not updatable - have to think about implications
 
@@ -454,7 +446,7 @@ def approval_program():
         Assert(Global.group_size() == Int(1)),
 
         # only the owner can withdraw
-        Assert(Gtxn[0].sender() == App.globalGet(Bytes(GLOBAL_OWNER))),
+        Assert(Gtxn[0].sender() == Global.creator_address()),
 
         # has to be after min target end date
         Assert(Global.latest_timestamp() > App.globalGet(

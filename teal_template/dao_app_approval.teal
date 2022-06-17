@@ -123,8 +123,7 @@ int 1
 ==
 assert
 gtxn 0 Sender
-byte "Owner"
-app_global_get
+global CreatorAddress
 ==
 assert
 global LatestTimestamp
@@ -170,12 +169,11 @@ int NoOp
 ==
 assert
 gtxn 0 NumAppArgs
-int 8
+int 7
 ==
 assert
 gtxn 0 Sender
-byte "Owner"
-app_global_get
+global CreatorAddress
 ==
 assert
 byte "CustomerEscrowAddress"
@@ -193,11 +191,8 @@ app_global_put
 byte "SocialMediaUrl"
 gtxna 0 ApplicationArgs 5
 app_global_put
-byte "Owner"
-gtxna 0 ApplicationArgs 6
-app_global_put
 byte "Versions"
-gtxna 0 ApplicationArgs 7
+gtxna 0 ApplicationArgs 6
 app_global_put
 int 1
 return
@@ -564,8 +559,7 @@ int appl
 ==
 assert
 gtxn 0 Sender
-byte "Owner"
-app_global_get
+global CreatorAddress
 ==
 assert
 int 1
@@ -592,7 +586,7 @@ int NoOp
 ==
 assert
 gtxn 1 NumAppArgs
-int 14
+int 13
 ==
 assert
 gtxn 1 Sender
@@ -661,22 +655,19 @@ app_global_put
 byte "SocialMediaUrl"
 gtxna 1 ApplicationArgs 8
 app_global_put
-byte "Owner"
+byte "Versions"
 gtxna 1 ApplicationArgs 9
 app_global_put
-byte "Versions"
-gtxna 1 ApplicationArgs 10
-app_global_put
 byte "SharesForInvestors"
-gtxna 1 ApplicationArgs 11
+gtxna 1 ApplicationArgs 10
 btoi
 app_global_put
 byte "Target"
-gtxna 1 ApplicationArgs 12
+gtxna 1 ApplicationArgs 11
 btoi
 app_global_put
 byte "TargetEndDate"
-gtxna 1 ApplicationArgs 13
+gtxna 1 ApplicationArgs 12
 btoi
 app_global_put
 byte "Raised"
