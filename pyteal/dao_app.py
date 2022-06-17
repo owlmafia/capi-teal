@@ -112,7 +112,13 @@ def approval_program():
 
         App.globalPut(Bytes(GLOBAL_RAISED), Int(0)),
 
+        # checks depending on global state
+
+        Assert(Gtxn[4].xfer_asset() == App.globalGet(
+            Bytes(GLOBAL_SHARES_ASSET_ID))),
+
         # creator's account setup
+
         InnerTxnBuilder.Begin(),
         # optin to funds asset
         InnerTxnBuilder.SetFields({
@@ -132,9 +138,6 @@ def approval_program():
             TxnField.fee: Int(0)
         }),
         InnerTxnBuilder.Submit(),
-
-        Assert(Gtxn[4].xfer_asset() == App.globalGet(
-            Bytes(GLOBAL_SHARES_ASSET_ID))),
 
         Approve()
     )

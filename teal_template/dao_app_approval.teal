@@ -669,6 +669,11 @@ app_global_put
 byte "Raised"
 int 0
 app_global_put
+gtxn 4 XferAsset
+byte "SharesAssetId"
+app_global_get
+==
+assert
 itxn_begin
 int axfer
 itxn_field TypeEnum
@@ -694,11 +699,6 @@ itxn_field XferAsset
 int 0
 itxn_field Fee
 itxn_submit
-gtxn 4 XferAsset
-byte "SharesAssetId"
-app_global_get
-==
-assert
 int 1
 return
 
