@@ -112,14 +112,14 @@ def approval_program():
 
         App.globalPut(Bytes(GLOBAL_RAISED), Int(0)),
 
+        # creator's account setup
         InnerTxnBuilder.Begin(),
         # optin to funds asset
         InnerTxnBuilder.SetFields({
             TxnField.type_enum: TxnType.AssetTransfer,
             TxnField.asset_receiver: Global.current_application_address(),
             TxnField.asset_amount: Int(0),
-            # TODO arg stored in global state instead (so it's guaranteed the same)
-            TxnField.xfer_asset: Gtxn[1].assets[0],
+            TxnField.xfer_asset: App.globalGet(Bytes(GLOBAL_FUNDS_ASSET_ID)),
             TxnField.fee: Int(0)
         }),
         InnerTxnBuilder.Next(),
@@ -128,8 +128,7 @@ def approval_program():
             TxnField.type_enum: TxnType.AssetTransfer,
             TxnField.asset_receiver: Global.current_application_address(),
             TxnField.asset_amount: Int(0),
-            # TODO arg stored in global state instead (so it's guaranteed the same)
-            TxnField.xfer_asset: Gtxn[1].assets[1],
+            TxnField.xfer_asset: App.globalGet(Bytes(GLOBAL_SHARES_ASSET_ID)),
             TxnField.fee: Int(0)
         }),
         InnerTxnBuilder.Submit(),

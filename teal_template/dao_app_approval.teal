@@ -676,7 +676,8 @@ global CurrentApplicationAddress
 itxn_field AssetReceiver
 int 0
 itxn_field AssetAmount
-gtxna 1 Assets 0
+byte "FundsAssetId"
+app_global_get
 itxn_field XferAsset
 int 0
 itxn_field Fee
@@ -687,7 +688,8 @@ global CurrentApplicationAddress
 itxn_field AssetReceiver
 int 0
 itxn_field AssetAmount
-gtxna 1 Assets 1
+byte "SharesAssetId"
+app_global_get
 itxn_field XferAsset
 int 0
 itxn_field Fee
