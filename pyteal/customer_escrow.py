@@ -10,6 +10,7 @@ GLOBAL_RECEIVED_TOTAL = "ReceivedTotal"
 LOCAL_CLAIMED_TOTAL = "ClaimedTotal"
 LOCAL_SHARES = "Shares"
 
+
 def program():
     handle_setup_dao = Seq(
         # app call
@@ -36,15 +37,18 @@ def program():
         # drain: funds xfer to app escrow
         Assert(Gtxn[1].type_enum() == TxnType.AssetTransfer),
         Assert(Gtxn[1].asset_amount() > Int(0)),
-        Assert(Gtxn[1].asset_receiver() == tmpl_app_escrow_address), # the funds are being drained to the app escrow
+        # the funds are being drained to the app escrow
+        Assert(Gtxn[1].asset_receiver() == tmpl_app_escrow_address),
         Assert(Gtxn[1].fee() == Int(0)),
         Assert(Gtxn[1].asset_close_to() == Global.zero_address()),
         Assert(Gtxn[1].rekey_to() == Global.zero_address()),
-        Assert(Gtxn[1].sender() == Gtxn[2].sender()), # both xfers are signed by the customer escrow
-        
+        # both xfers are signed by the customer escrow
+        Assert(Gtxn[1].sender() == Gtxn[2].sender()),
+
         # pay capi fee: funds xfer to capi escrow
         Assert(Gtxn[2].type_enum() == TxnType.AssetTransfer),
-        Assert(Gtxn[2].asset_receiver() == tmpl_capi_escrow_address), # the capi fee is being sent to the capi escrow
+        # the capi fee is being sent to the capi escrow
+        Assert(Gtxn[2].asset_receiver() == tmpl_capi_escrow_address),
         Assert(Gtxn[2].fee() == Int(0)),
         Assert(Gtxn[2].asset_close_to() == Global.zero_address()),
         Assert(Gtxn[2].rekey_to() == Global.zero_address()),
@@ -61,10 +65,10 @@ def program():
 
     return compileTeal(program, Mode.Signature, version=6)
 
+
 path = 'teal_template/customer_escrow.teal'
 with open(path, 'w') as f:
     output = program()
     # print(output)
     f.write(output)
     print("Done! Wrote customer escrow TEAL to: " + path)
-
