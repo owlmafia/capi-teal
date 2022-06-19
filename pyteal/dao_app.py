@@ -336,10 +336,13 @@ def approval_program():
         # both xfers are signed by the customer escrow
         Assert(Gtxn[1].sender() == Gtxn[2].sender()),
 
-        # pay capi fee: funds xfer to capi escrow
+        # pay capi fee: funds xfer to capi escrow (lsig)
         Assert(Gtxn[2].type_enum() == TxnType.AssetTransfer),
         Assert(Gtxn[2].xfer_asset() == App.globalGet(Bytes(GLOBAL_FUNDS_ASSET_ID))),
         Assert(Gtxn[2].asset_receiver() == tmpl_capi_escrow_address),
+        Assert(Gtxn[2].fee() == Int(0)), # lsig check
+        Assert(Gtxn[2].asset_close_to() == Global.zero_address()), # lsig check
+        Assert(Gtxn[2].rekey_to() == Global.zero_address()), # lsig check
 
         # check that capi fee is correct
         drain_asset_balance,  # needs to be listed like this, see: https://forum.algorand.org/t/using-global-get-ex-on-noop-call-giving-error-when-deploying-app/5314/2?u=user123
