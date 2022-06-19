@@ -261,9 +261,6 @@ def approval_program():
         claimable_before_locking = ScratchVar(TealType.uint64)
 
         return Seq(
-            # TODO is this really needed?
-            # Assert(Gtxn[1].asset_amount() > Int(0)), # sanity: don't allow locking 0 shares
-
             claimable_before_locking.store(claimable_dividend),
 
             App.localPut(  # set / increment share count in local state
@@ -381,6 +378,9 @@ def approval_program():
         Approve()
     )
 
+    invest_calculated_share_amount = ScratchVar(TealType.uint64)
+    # note that when investing (opposed to locking, where there's a shares xfer), 
+    # the share amount is calculated here (based on sent funds and share price)
     handle_invest = Seq(
         # Assert(Global.group_size() == Int(3)), # used as condition
 
@@ -407,9 +407,15 @@ def approval_program():
         Assert(Gtxn[0].sender() == Gtxn[1].sender()),
         Assert(Gtxn[1].sender() == Gtxn[2].sender()),
 
+        # save the calculated share amount in scratch (used in multiple places)
+        invest_calculated_share_amount.store(Div(Gtxn[2].asset_amount(), tmpl_share_price)),
+
         # double-check that the share amount matches what the caller expects
         # (just in case for unexpected rounding issues)
-        Assert(Div(Gtxn[2].asset_amount(), tmpl_share_price) == Btoi(Gtxn[1].application_args[1])),
+        Assert(invest_calculated_share_amount.load() == Btoi(Gtxn[1].application_args[1])),
+
+        # sanity check: the bought share amount is > 0 (even if for whatever reason 0 was passed as expected/argument)
+        Assert(invest_calculated_share_amount.load() > Int(0)),
 
         # update total raised amount
         App.globalPut(Bytes(GLOBAL_RAISED), Add(
@@ -419,7 +425,7 @@ def approval_program():
 
         # save shares on local state
         lock_shares(
-            Div(Gtxn[2].asset_amount(), tmpl_share_price), 
+            invest_calculated_share_amount.load(),
             Gtxn[0].sender()
         ),
 

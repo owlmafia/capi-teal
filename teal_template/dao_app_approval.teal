@@ -540,9 +540,15 @@ assert
 gtxn 2 AssetAmount
 int TMPL_SHARE_PRICE
 /
+store 2
+load 2
 gtxna 1 ApplicationArgs 1
 btoi
 ==
+assert
+load 2
+int 0
+>
 assert
 byte "Raised"
 byte "Raised"
@@ -550,9 +556,7 @@ app_global_get
 gtxn 2 AssetAmount
 +
 app_global_put
-gtxn 2 AssetAmount
-int TMPL_SHARE_PRICE
-/
+load 2
 gtxn 0 Sender
 callsub lockshares_0
 gtxn 0 Sender
@@ -732,8 +736,8 @@ return
 
 // lock_shares
 lockshares_0:
+store 4
 store 3
-store 2
 gtxn 0 Sender
 byte "Shares"
 app_local_get
@@ -752,16 +756,16 @@ gtxn 0 Sender
 byte "ClaimedTotal"
 app_local_get
 -
-store 4
-load 3
+store 5
+load 4
 byte "Shares"
-load 3
+load 4
 byte "Shares"
 app_local_get
-load 2
+load 3
 +
 app_local_put
-load 3
+load 4
 byte "ClaimedTotal"
 gtxn 0 Sender
 byte "Shares"
@@ -781,19 +785,19 @@ gtxn 0 Sender
 byte "ClaimedTotal"
 app_local_get
 -
-load 4
+load 5
 -
 app_local_put
-load 3
+load 4
 byte "ClaimedInit"
-load 3
+load 4
 byte "ClaimedTotal"
 app_local_get
 app_local_put
 byte "LockedShares"
 byte "LockedShares"
 app_global_get
-load 2
+load 3
 +
 app_global_put
 retsub
