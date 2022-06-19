@@ -38,8 +38,6 @@ GLOBAL_VERSIONS = "Versions"
 LOCAL_SHARES = "Shares"
 LOCAL_CLAIMED_TOTAL = "ClaimedTotal"
 LOCAL_CLAIMED_INIT = "ClaimedInit"
-LOCAL_DAO_ID = "Dao"
-
 
 def approval_program():
     handle_create = Seq(
@@ -292,14 +290,6 @@ def approval_program():
             ),
         )
 
-    # For invest/lock. Dao id expected as first arg of the first tx
-    # save the dao id in local state, so we can find daos where a user invested in (with the indexer)
-    # TODO rename in CapiDao or similar - this key is used to filter for txs belonging to capi / dao id use case
-    # - we don't have the app id when querying this, only the sender account and this key
-    # NOTE assumes that sender of Gtxn[0] is the app caller (ownler of local state where id should be written)
-    # TODO review whether really needed
-    save_dao_id = App.localPut(Gtxn[0].sender(), Bytes(LOCAL_DAO_ID), Global.current_application_id())
-
     handle_lock = Seq(
         Assert(Global.group_size() == Int(2)),
 
@@ -320,9 +310,6 @@ def approval_program():
 
         # save shares on local state
         lock_shares(Gtxn[1].asset_amount(), Gtxn[0].sender()),
-
-        # save the dao id on local state
-        save_dao_id,
 
         Approve()
     )
@@ -428,9 +415,6 @@ def approval_program():
             handle_invest_calculated_share_amount.load(),
             Gtxn[0].sender()
         ),
-
-        # save the dao id on local state
-        save_dao_id,
 
         Approve()
     )

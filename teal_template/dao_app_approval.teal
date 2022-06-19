@@ -332,10 +332,6 @@ assert
 gtxn 1 AssetAmount
 gtxn 0 Sender
 callsub lockshares_0
-gtxn 0 Sender
-byte "Dao"
-global CurrentApplicationID
-app_local_put
 int 1
 return
 main_l18:
@@ -559,10 +555,6 @@ app_global_put
 load 2
 gtxn 0 Sender
 callsub lockshares_0
-gtxn 0 Sender
-byte "Dao"
-global CurrentApplicationID
-app_local_put
 int 1
 return
 main_l23:
