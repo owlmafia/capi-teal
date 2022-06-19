@@ -609,6 +609,10 @@ gtxn 3 AssetAmount
 int 0
 ==
 assert
+gtxn 3 AssetReceiver
+gtxn 3 Sender
+==
+assert
 gtxn 4 TypeEnum
 int axfer
 ==

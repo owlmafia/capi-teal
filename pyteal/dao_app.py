@@ -75,6 +75,7 @@ def approval_program():
         # customer escrow opt-ins to funds asset
         Assert(Gtxn[3].type_enum() == TxnType.AssetTransfer),
         Assert(Gtxn[3].asset_amount() == Int(0)),
+        Assert(Gtxn[3].asset_receiver() == Gtxn[3].sender()),
 
         # creator transfers shares (to be sold to investors) to app escrow
         Assert(Gtxn[4].type_enum() == TxnType.AssetTransfer),
@@ -380,7 +381,6 @@ def approval_program():
         Assert(Gtxn[0].type_enum() == TxnType.AssetTransfer),
         Assert(Gtxn[0].xfer_asset() == App.globalGet(Bytes(GLOBAL_SHARES_ASSET_ID))),
         Assert(Gtxn[0].asset_amount() == Int(0)),
-        # TODO is this check needed - if yes add to other optins
         Assert(Gtxn[0].asset_receiver() == Gtxn[0].sender()),
 
         # app call to initialize shares state

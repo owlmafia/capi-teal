@@ -21,6 +21,7 @@ def program():
         # customer escrow opt-ins to funds asset
         Assert(Gtxn[3].type_enum() == TxnType.AssetTransfer),
         Assert(Gtxn[3].asset_amount() == Int(0)),
+        Assert(Gtxn[3].asset_receiver() == Gtxn[3].sender()),
 
         Approve()
     )
