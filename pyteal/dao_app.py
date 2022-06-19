@@ -76,7 +76,6 @@ def approval_program():
         Assert(Gtxn[3].asset_receiver() == Gtxn[3].sender()),
         Assert(Gtxn[3].fee() == Int(0)), # lsig check
         Assert(Gtxn[3].asset_receiver() == Gtxn[3].sender()), # lsig check
-        # todo check needed for xfer?
         Assert(Gtxn[3].rekey_to() == Global.zero_address()), # lsig check
 
         # creator transfers shares (to be sold to investors) to app escrow
@@ -333,7 +332,6 @@ def approval_program():
         Assert(Gtxn[1].asset_receiver() == Global.current_application_address()),
         Assert(Gtxn[1].fee() == Int(0)), # lsig check
         Assert(Gtxn[1].asset_close_to() == Global.zero_address()), # lsig check
-        # todo check needed for xfer?
         Assert(Gtxn[1].rekey_to() == Global.zero_address()), # lsig check
         # both xfers are signed by the customer escrow
         Assert(Gtxn[1].sender() == Gtxn[2].sender()),
