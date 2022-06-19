@@ -253,9 +253,13 @@ def approval_program():
     # expects tx 1 to be the shares xfer to the app and its sender verified as app caller (local state)
     @Subroutine(TealType.none)
     def lock_shares(share_amount, sender):
+        claimable_before_locking = ScratchVar(TealType.uint64)
+
         return Seq(
             # TODO is this really needed?
             # Assert(Gtxn[1].asset_amount() > Int(0)), # sanity: don't allow locking 0 shares
+
+            claimable_before_locking.store(claimable_dividend),
 
             App.localPut(  # set / increment share count in local state
                 sender,
@@ -265,16 +269,12 @@ def approval_program():
                     share_amount
                 )
             ),
+
             # initialize already claimed local state
             App.localPut(
                 sender,
                 Bytes(LOCAL_CLAIMED_TOTAL),
-                # NOTE that this sets claimedTotal to the entitled amount each time that the investor buys/locks shares
-                # meaning that investors may lose pending dividend by buying or locking new shares
-                # TODO improve? - a non TEAL way could be to just automatically retrieve pending dividend in the same group
-                # see more notes in old repo
-                claimable_dividend
-                # Gtxn[1].asset_amount()
+                Minus(claimable_dividend, claimable_before_locking.load())
             ),
             # remember initial already claimed local state
             App.localPut(

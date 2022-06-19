@@ -706,6 +706,25 @@ return
 lockshares_0:
 store 3
 store 2
+gtxn 0 Sender
+byte "Shares"
+app_local_get
+int TMPL_PRECISION__
+*
+int TMPL_INVESTORS_SHARE
+*
+int TMPL_SHARE_SUPPLY
+/
+byte "CentralReceivedTotal"
+app_global_get
+*
+int TMPL_PRECISION_SQUARE
+/
+gtxn 0 Sender
+byte "ClaimedTotal"
+app_local_get
+-
+store 4
 load 3
 byte "Shares"
 load 3
@@ -733,6 +752,8 @@ int TMPL_PRECISION_SQUARE
 gtxn 0 Sender
 byte "ClaimedTotal"
 app_local_get
+-
+load 4
 -
 app_local_put
 load 3
