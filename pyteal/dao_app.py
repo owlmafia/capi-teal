@@ -72,10 +72,14 @@ def approval_program():
         Assert(Gtxn[2].type_enum() == TxnType.Payment),
         Assert(Gtxn[2].receiver() == Gtxn[1].application_args[0]),
 
-        # customer escrow opt-ins to funds asset
+        # customer escrow opt-ins to funds asset (lsig)
         Assert(Gtxn[3].type_enum() == TxnType.AssetTransfer),
         Assert(Gtxn[3].asset_amount() == Int(0)),
         Assert(Gtxn[3].asset_receiver() == Gtxn[3].sender()),
+        Assert(Gtxn[3].fee() == Int(0)), # lsig check
+        Assert(Gtxn[3].asset_receiver() == Gtxn[3].sender()), # lsig check
+        # todo check needed for xfer?
+        Assert(Gtxn[3].rekey_to() == Global.zero_address()), # lsig check
 
         # creator transfers shares (to be sold to investors) to app escrow
         Assert(Gtxn[4].type_enum() == TxnType.AssetTransfer),
@@ -337,12 +341,16 @@ def approval_program():
         Assert(Gtxn[0].application_id() == Global.current_application_id()),
         Assert(Gtxn[0].on_completion() == OnComplete.NoOp),
 
-        # drain: funds xfer to app escrow
+        # drain: funds xfer to app escrow (lsig)
         Assert(Gtxn[1].type_enum() == TxnType.AssetTransfer),
         Assert(Gtxn[1].asset_amount() > Int(0)),
         Assert(Gtxn[1].sender() == App.globalGet(Bytes(GLOBAL_CUSTOMER_ESCROW_ADDRESS))),
         Assert(Gtxn[1].xfer_asset() == App.globalGet(Bytes(GLOBAL_FUNDS_ASSET_ID))),
         Assert(Gtxn[1].asset_receiver() == Global.current_application_address()),
+        Assert(Gtxn[1].fee() == Int(0)), # lsig check
+        Assert(Gtxn[1].asset_close_to() == Global.zero_address()), # lsig check
+        # todo check needed for xfer?
+        Assert(Gtxn[1].rekey_to() == Global.zero_address()), # lsig check
         # both xfers are signed by the customer escrow
         Assert(Gtxn[1].sender() == Gtxn[2].sender()),
 

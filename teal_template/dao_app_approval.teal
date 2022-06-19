@@ -235,6 +235,18 @@ gtxn 1 AssetReceiver
 global CurrentApplicationAddress
 ==
 assert
+gtxn 1 Fee
+int 0
+==
+assert
+gtxn 1 AssetCloseTo
+global ZeroAddress
+==
+assert
+gtxn 1 RekeyTo
+global ZeroAddress
+==
+assert
 gtxn 1 Sender
 gtxn 2 Sender
 ==
@@ -611,6 +623,18 @@ int 0
 assert
 gtxn 3 AssetReceiver
 gtxn 3 Sender
+==
+assert
+gtxn 3 Fee
+int 0
+==
+assert
+gtxn 3 AssetReceiver
+gtxn 3 Sender
+==
+assert
+gtxn 3 RekeyTo
+global ZeroAddress
 ==
 assert
 gtxn 4 TypeEnum
