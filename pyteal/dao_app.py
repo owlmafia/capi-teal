@@ -15,8 +15,6 @@ GLOBAL_RECEIVED_TOTAL = "CentralReceivedTotal"
 # TODO rename "available" amount: withdrawable is incorrect, withdraw can be blocked by funds end date too, and this amount is also claimable (dividend)
 GLOBAL_WITHDRAWABLE_AMOUNT = "WithdrawableAmount"
 
-GLOBAL_CUSTOMER_ESCROW_ADDRESS = "CustomerEscrowAddress"
-
 GLOBAL_SHARES_ASSET_ID = "SharesAssetId"
 GLOBAL_FUNDS_ASSET_ID = "FundsAssetId"
 
@@ -65,55 +63,39 @@ def approval_program():
         Assert(Gtxn[1].type_enum() == TxnType.ApplicationCall),
         Assert(Gtxn[1].application_id() == Global.current_application_id()),
         Assert(Gtxn[1].on_completion() == OnComplete.NoOp),
-        Assert(Gtxn[1].application_args.length() == Int(12)),
+        Assert(Gtxn[1].application_args.length() == Int(11)),
         Assert(Gtxn[1].sender() == Global.creator_address()),
 
-        # creator sends min balance to customer escrow
-        Assert(Gtxn[2].type_enum() == TxnType.Payment),
-        Assert(Gtxn[2].receiver() == Gtxn[1].application_args[0]),
-
-        # customer escrow opt-ins to funds asset (lsig)
-        Assert(Gtxn[3].type_enum() == TxnType.AssetTransfer),
-        Assert(Gtxn[3].asset_amount() == Int(0)),
-        Assert(Gtxn[3].asset_receiver() == Gtxn[3].sender()),
-        Assert(Gtxn[3].fee() == Int(0)), # lsig check
-        Assert(Gtxn[3].asset_receiver() == Gtxn[3].sender()), # lsig check
-        Assert(Gtxn[3].rekey_to() == Global.zero_address()), # lsig check
-
-        # TODO low prio check: the customer escrow (receiver of min balance, sender of optin) is the same we're setting in global state
-
         # creator transfers shares (to be sold to investors) to app escrow
-        Assert(Gtxn[4].type_enum() == TxnType.AssetTransfer),
-        Assert(Gtxn[4].xfer_asset() == Btoi(Gtxn[1].application_args[1])),
+        Assert(Gtxn[2].type_enum() == TxnType.AssetTransfer),
+        Assert(Gtxn[2].xfer_asset() == Btoi(Gtxn[1].application_args[0])),
 
         # initialize state
         App.globalPut(Bytes(GLOBAL_RECEIVED_TOTAL), Int(0)),
         App.globalPut(Bytes(GLOBAL_WITHDRAWABLE_AMOUNT), Int(0)),
         App.globalPut(Bytes(GLOBAL_LOCKED_SHARES), Int(0)),
 
-        App.globalPut(Bytes(GLOBAL_CUSTOMER_ESCROW_ADDRESS), Gtxn[1].application_args[0]),
+        App.globalPut(Bytes(GLOBAL_SHARES_ASSET_ID), Btoi(Gtxn[1].application_args[0])),
+        App.globalPut(Bytes(GLOBAL_FUNDS_ASSET_ID), Btoi(Gtxn[1].application_args[1])),
 
-        App.globalPut(Bytes(GLOBAL_SHARES_ASSET_ID), Btoi(Gtxn[1].application_args[1])),
-        App.globalPut(Bytes(GLOBAL_FUNDS_ASSET_ID), Btoi(Gtxn[1].application_args[2])),
+        App.globalPut(Bytes(GLOBAL_DAO_NAME), Gtxn[1].application_args[2]),
+        App.globalPut(Bytes(GLOBAL_DAO_DESC), Gtxn[1].application_args[3]),
+        App.globalPut(Bytes(GLOBAL_SHARE_PRICE), Btoi(Gtxn[1].application_args[4])),
+        App.globalPut(Bytes(GLOBAL_INVESTORS_PART), Btoi(Gtxn[1].application_args[5])),
 
-        App.globalPut(Bytes(GLOBAL_DAO_NAME), Gtxn[1].application_args[3]),
-        App.globalPut(Bytes(GLOBAL_DAO_DESC), Gtxn[1].application_args[4]),
-        App.globalPut(Bytes(GLOBAL_SHARE_PRICE), Btoi(Gtxn[1].application_args[5])),
-        App.globalPut(Bytes(GLOBAL_INVESTORS_PART), Btoi(Gtxn[1].application_args[6])),
+        App.globalPut(Bytes(GLOBAL_LOGO_URL), Gtxn[1].application_args[6]),
+        App.globalPut(Bytes(GLOBAL_SOCIAL_MEDIA_URL), Gtxn[1].application_args[7]),
 
-        App.globalPut(Bytes(GLOBAL_LOGO_URL), Gtxn[1].application_args[7]),
-        App.globalPut(Bytes(GLOBAL_SOCIAL_MEDIA_URL), Gtxn[1].application_args[8]),
+        App.globalPut(Bytes(GLOBAL_VERSIONS), Gtxn[1].application_args[8]),
 
-        App.globalPut(Bytes(GLOBAL_VERSIONS), Gtxn[1].application_args[9]),
-
-        App.globalPut(Bytes(GLOBAL_TARGET), Btoi(Gtxn[1].application_args[10])),
-        App.globalPut(Bytes(GLOBAL_TARGET_END_DATE), Btoi(Gtxn[1].application_args[11])),
+        App.globalPut(Bytes(GLOBAL_TARGET), Btoi(Gtxn[1].application_args[9])),
+        App.globalPut(Bytes(GLOBAL_TARGET_END_DATE), Btoi(Gtxn[1].application_args[10])),
 
         App.globalPut(Bytes(GLOBAL_RAISED), Int(0)),
 
         # checks depending on global state
 
-        Assert(Gtxn[4].xfer_asset() == App.globalGet(Bytes(GLOBAL_SHARES_ASSET_ID))),
+        Assert(Gtxn[2].xfer_asset() == App.globalGet(Bytes(GLOBAL_SHARES_ASSET_ID))),
 
         # creator's account setup
 
@@ -147,18 +129,17 @@ def approval_program():
         Assert(Gtxn[0].type_enum() == TxnType.ApplicationCall),
         Assert(Gtxn[0].application_id() == Global.current_application_id()),
         Assert(Gtxn[0].on_completion() == OnComplete.NoOp),
-        Assert(Gtxn[0].application_args.length() == Int(7)),
+        Assert(Gtxn[0].application_args.length() == Int(6)),
         Assert(Gtxn[0].sender() == Global.creator_address()),
 
         # update data
-        App.globalPut(Bytes(GLOBAL_CUSTOMER_ESCROW_ADDRESS), Gtxn[0].application_args[1]),
-        App.globalPut(Bytes(GLOBAL_DAO_NAME), Gtxn[0].application_args[2]),
-        App.globalPut(Bytes(GLOBAL_DAO_DESC), Gtxn[0].application_args[3]),
+        App.globalPut(Bytes(GLOBAL_DAO_NAME), Gtxn[0].application_args[1]),
+        App.globalPut(Bytes(GLOBAL_DAO_DESC), Gtxn[0].application_args[2]),
         # for now price is immutable, simplifies funds reclaiming
-        # App.globalPut(Bytes(GLOBAL_SHARE_PRICE), Btoi(Gtxn[0].application_args[4])),
-        App.globalPut(Bytes(GLOBAL_LOGO_URL), Gtxn[0].application_args[4]),
-        App.globalPut(Bytes(GLOBAL_SOCIAL_MEDIA_URL), Gtxn[0].application_args[5]),
-        App.globalPut(Bytes(GLOBAL_VERSIONS), Gtxn[0].application_args[6]),
+        # App.globalPut(Bytes(GLOBAL_SHARE_PRICE), Btoi(Gtxn[0].application_args[3])),
+        App.globalPut(Bytes(GLOBAL_LOGO_URL), Gtxn[0].application_args[3]),
+        App.globalPut(Bytes(GLOBAL_SOCIAL_MEDIA_URL), Gtxn[0].application_args[4]),
+        App.globalPut(Bytes(GLOBAL_VERSIONS), Gtxn[0].application_args[5]),
 
         # for now shares asset, funds asset and investor's part not updatable - have to think about implications
 
@@ -567,12 +548,12 @@ def approval_program():
     )
 
     program = Cond(
-        [Global.group_size() == Int(5), handle_setup_dao],
-        [Gtxn[0].on_completion() == Int(4), handle_update],
         [And(
             Gtxn[0].type_enum() == TxnType.AssetTransfer,
             Global.group_size() == Int(3)
         ), handle_invest],
+        [Global.group_size() == Int(3), handle_setup_dao],
+        [Gtxn[0].on_completion() == Int(4), handle_update],
         [Gtxn[0].application_id() == Int(0), handle_create],
         [Gtxn[0].application_args[0] == Bytes("optin"), handle_optin],
         [Gtxn[0].application_args[0] == Bytes("unlock"), handle_unlock],
