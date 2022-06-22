@@ -12,6 +12,8 @@ tmpl_investors_share = Tmpl.Int("TMPL_INVESTORS_SHARE")
 tmpl_share_supply = Tmpl.Int("TMPL_SHARE_SUPPLY")
 
 GLOBAL_RECEIVED_TOTAL = "CentralReceivedTotal"
+# TODO rename "available" amount: withdrawable is incorrect, withdraw can be blocked by funds end date too, and this amount is also claimable (dividend)
+GLOBAL_WITHDRAWABLE_AMOUNT = "WithdrawableAmount"
 
 GLOBAL_CUSTOMER_ESCROW_ADDRESS = "CustomerEscrowAddress"
 
@@ -78,12 +80,15 @@ def approval_program():
         Assert(Gtxn[3].asset_receiver() == Gtxn[3].sender()), # lsig check
         Assert(Gtxn[3].rekey_to() == Global.zero_address()), # lsig check
 
+        # TODO low prio check: the customer escrow (receiver of min balance, sender of optin) is the same we're setting in global state
+
         # creator transfers shares (to be sold to investors) to app escrow
         Assert(Gtxn[4].type_enum() == TxnType.AssetTransfer),
         Assert(Gtxn[4].xfer_asset() == Btoi(Gtxn[1].application_args[1])),
 
         # initialize state
         App.globalPut(Bytes(GLOBAL_RECEIVED_TOTAL), Int(0)),
+        App.globalPut(Bytes(GLOBAL_WITHDRAWABLE_AMOUNT), Int(0)),
         App.globalPut(Bytes(GLOBAL_LOCKED_SHARES), Int(0)),
 
         App.globalPut(Bytes(GLOBAL_CUSTOMER_ESCROW_ADDRESS), Gtxn[1].application_args[0]),
@@ -188,6 +193,8 @@ def approval_program():
         }),
         InnerTxnBuilder.Submit(),
 
+        # TODO where is locked shares local state decremented? not tested?
+
         # decrement locked shares global state
         App.globalPut(
             Bytes(GLOBAL_LOCKED_SHARES),
@@ -200,6 +207,8 @@ def approval_program():
         Approve()
     )
 
+    # extracted part of claimable_dividend, for readability
+    # how much the investor is entitled to, based on the total received and the investor's locked shares (does not consider already claimed dividend)
     total_entitled_dividend = Div(
         Mul(
             Div(
@@ -228,16 +237,34 @@ def approval_program():
         Assert(Gtxn[0].type_enum() == TxnType.ApplicationCall),
         Assert(Gtxn[0].application_id() == Global.current_application_id()),
         Assert(Gtxn[0].on_completion() == OnComplete.NoOp),
+        
+        #TODO tests: can't withdraw and claim more than withdrawable amount
+
+        # has to be <= withdrawable amount
+        Assert(claimable_dividend <= App.globalGet(Bytes(GLOBAL_WITHDRAWABLE_AMOUNT))),
 
         # send dividend to caller
         InnerTxnBuilder.Begin(),
         InnerTxnBuilder.SetFields({
             TxnField.type_enum: TxnType.AssetTransfer,
+            # todo scratch? compare teal length with repeating claimable_dividend
             TxnField.asset_amount: claimable_dividend,
             TxnField.asset_receiver: Gtxn[0].sender(),
             TxnField.xfer_asset: App.globalGet(Bytes(GLOBAL_FUNDS_ASSET_ID)),
         }),
         InnerTxnBuilder.Submit(),
+
+        # decrease withdrawable amount
+        # no underflow possible, since we checked that claimable_dividend <= GLOBAL_WITHDRAWABLE_AMOUNT
+        # NOTE: BEFORE updating LOCAL_CLAIMED_TOTAL, since we read it to calculate the current divident being claimed
+        # (TODO above solved by using scratch?)
+        App.globalPut(
+            Bytes(GLOBAL_WITHDRAWABLE_AMOUNT),
+            Minus(
+                App.globalGet(Bytes(GLOBAL_WITHDRAWABLE_AMOUNT)),
+                claimable_dividend
+            )
+        ),
 
         # update local state with retrieved dividend
         App.localPut(
@@ -313,54 +340,74 @@ def approval_program():
         Approve()
     )
 
-    drain_asset_balance = AssetHolding.balance(
-        Gtxn[1].sender(), Gtxn[1].xfer_asset())
+    app_escrow_funds_balance = AssetHolding.balance(
+        Global.current_application_address(), App.globalGet(Bytes(GLOBAL_FUNDS_ASSET_ID))
+    )
 
+    # note that withdrawals don't affect this value, 
+    # as they're substracted atomically (in the withdrawal group) from both balance and GLOBAL_WITHDRAWABLE_AMOUNT
+    # so basic arithmetic: if we substract a value from both operands of a substraction, the result is unaffected
+    handle_drain_not_yet_drained_amount = Minus(
+        app_escrow_funds_balance.value(),
+        App.globalGet(Bytes(GLOBAL_WITHDRAWABLE_AMOUNT))
+    )
+
+    def calculate_capi_fee(amount): 
+        return Div(
+            Mul(
+                Mul(amount, tmpl_precision),
+                tmpl_capi_share
+            ),
+            tmpl_precision_square
+        )
+
+    # handle_drain_capi_fee = ScratchVar(TealType.uint64)
     handle_drain = Seq(
-        Assert(Global.group_size() == Int(3)),
+        # handle_drain_capi_fee.store(calculate_capi_fee(handle_drain_not_yet_drained_amount)),
+        
+        Assert(Global.group_size() == Int(1)),
 
-        # call app to verify amount and update state
+        # app call
         Assert(Gtxn[0].type_enum() == TxnType.ApplicationCall),
         Assert(Gtxn[0].application_id() == Global.current_application_id()),
         Assert(Gtxn[0].on_completion() == OnComplete.NoOp),
 
-        # drain: funds xfer to app escrow (lsig)
-        Assert(Gtxn[1].type_enum() == TxnType.AssetTransfer),
-        Assert(Gtxn[1].asset_amount() > Int(0)),
-        Assert(Gtxn[1].sender() == App.globalGet(Bytes(GLOBAL_CUSTOMER_ESCROW_ADDRESS))),
-        Assert(Gtxn[1].xfer_asset() == App.globalGet(Bytes(GLOBAL_FUNDS_ASSET_ID))),
-        Assert(Gtxn[1].asset_receiver() == Global.current_application_address()),
-        Assert(Gtxn[1].fee() == Int(0)), # lsig check
-        Assert(Gtxn[1].asset_close_to() == Global.zero_address()), # lsig check
-        Assert(Gtxn[1].rekey_to() == Global.zero_address()), # lsig check
-        # both xfers are signed by the customer escrow
-        Assert(Gtxn[1].sender() == Gtxn[2].sender()),
+        # needs to be listed like this, see: https://forum.algorand.org/t/using-global-get-ex-on-noop-call-giving-error-when-deploying-app/5314/2
+        # (app_escrow_funds_balance is used in handle_drain_not_yet_drained_amount)
+        app_escrow_funds_balance,
 
-        # pay capi fee: funds xfer to capi escrow (lsig)
-        Assert(Gtxn[2].type_enum() == TxnType.AssetTransfer),
-        Assert(Gtxn[2].xfer_asset() == App.globalGet(Bytes(GLOBAL_FUNDS_ASSET_ID))),
-        Assert(Gtxn[2].asset_receiver() == tmpl_capi_escrow_address),
-        Assert(Gtxn[2].fee() == Int(0)), # lsig check
-        Assert(Gtxn[2].asset_close_to() == Global.zero_address()), # lsig check
-        Assert(Gtxn[2].rekey_to() == Global.zero_address()), # lsig check
-
-        # check that capi fee is correct
-        drain_asset_balance,  # needs to be listed like this, see: https://forum.algorand.org/t/using-global-get-ex-on-noop-call-giving-error-when-deploying-app/5314/2?u=user123
-        # AssetHolding.balance(Gtxn[2].sender(), Gtxn[2].xfer_asset()),
-        Assert(
-            Gtxn[2].asset_amount() == Div(
-                Mul(
-                    Mul(drain_asset_balance.value(), tmpl_precision),
-                    tmpl_capi_share
-                ),
-                tmpl_precision_square
+        # increment total received
+        App.globalPut(
+            Bytes(GLOBAL_RECEIVED_TOTAL),
+            Add(
+                App.globalGet(Bytes(GLOBAL_RECEIVED_TOTAL)),
+                Minus(handle_drain_not_yet_drained_amount, calculate_capi_fee(handle_drain_not_yet_drained_amount))
             )
         ),
 
-        # update total received
+        # pay capi fee
+        # note BEFORE updating GLOBAL_WITHDRAWABLE_AMOUNT as it needs this state 
+        # to calculate not yet drained amount  
+        InnerTxnBuilder.Begin(),
+        InnerTxnBuilder.SetFields({
+            TxnField.type_enum: TxnType.AssetTransfer,
+            TxnField.asset_amount: calculate_capi_fee(handle_drain_not_yet_drained_amount),
+            TxnField.asset_receiver: tmpl_capi_escrow_address,
+            TxnField.xfer_asset: App.globalGet(Bytes(GLOBAL_FUNDS_ASSET_ID)),
+        }),
+        InnerTxnBuilder.Submit(),
+
+        # increment withdrawable amount
+        # WA = WA + NYD (not yet drained) - fee on NYD
+        # in words: by draining we make the "new income" (in prev. implementation, customer escrow balance) minus capi fee available to be withdrawn
+        # note AFTER the inner tx, 
+        # which accesses GLOBAL_WITHDRAWABLE_AMOUNT to calculate the not yet drained amount / the capi fee
         App.globalPut(
-            Bytes(GLOBAL_RECEIVED_TOTAL),
-            Add(App.globalGet(Bytes(GLOBAL_RECEIVED_TOTAL)), Gtxn[1].asset_amount())
+            Bytes(GLOBAL_WITHDRAWABLE_AMOUNT),
+            Add(
+                App.globalGet(Bytes(GLOBAL_WITHDRAWABLE_AMOUNT)),
+                Minus(handle_drain_not_yet_drained_amount, calculate_capi_fee(handle_drain_not_yet_drained_amount))
+            )
         ),
 
         Approve()
@@ -390,6 +437,16 @@ def approval_program():
         Assert(Gtxn[2].asset_amount() > Int(0)),
         Assert(Gtxn[2].xfer_asset() == App.globalGet(Bytes(GLOBAL_FUNDS_ASSET_ID))),
         Assert(Gtxn[2].asset_receiver() == Global.current_application_address()),
+
+        # increment withdrawable amount state
+        # investments don't pay capi fee or generate dividend, so are immediately withdrawable (don't have to be drained)
+        App.globalPut(
+            Bytes(GLOBAL_WITHDRAWABLE_AMOUNT),
+            Add(
+                App.globalGet(Bytes(GLOBAL_WITHDRAWABLE_AMOUNT)),
+                Gtxn[2].asset_amount()
+            )
+        ),
 
         # the investor sends all txs
         Assert(Gtxn[0].sender() == Gtxn[1].sender()),
@@ -428,10 +485,24 @@ def approval_program():
 
         # has to be after min target end date
         Assert(Global.latest_timestamp() > App.globalGet(Bytes(GLOBAL_TARGET_END_DATE))),
+
+        # has to be <= withdrawable amount
+        Assert(Btoi(Gtxn[0].application_args[1]) <= App.globalGet(Bytes(GLOBAL_WITHDRAWABLE_AMOUNT))),
+
         # the min target was met
         # (if the target wasn't met, the project can't start and investors can reclaim their money)
         Assert(App.globalGet(Bytes(GLOBAL_RAISED)) >= App.globalGet(Bytes(GLOBAL_TARGET))),
 
+        # decrease withdrawable amount
+        App.globalPut(
+            Bytes(GLOBAL_WITHDRAWABLE_AMOUNT),
+            Minus(
+                App.globalGet(Bytes(GLOBAL_WITHDRAWABLE_AMOUNT)),
+                Btoi(Gtxn[0].application_args[1])
+            )
+        ),
+
+        # send the funds to the withdrawer
         InnerTxnBuilder.Begin(),
         InnerTxnBuilder.SetFields({
             TxnField.type_enum: TxnType.AssetTransfer,
@@ -444,6 +515,8 @@ def approval_program():
         Approve()
     )
 
+    # note that for reclaim, we expect the user to have unlocked the shares
+    # there's no direct path from locked shares to reclaiming in teal - the app can chain these steps
     handle_reclaim = Seq(
         Assert(Global.group_size() == Int(2)),
 
@@ -474,11 +547,21 @@ def approval_program():
         InnerTxnBuilder.Begin(),
         InnerTxnBuilder.SetFields({
             TxnField.type_enum: TxnType.AssetTransfer,
+            # TODO scratch?
             TxnField.asset_amount: Gtxn[1].asset_amount() * App.globalGet(Bytes(GLOBAL_SHARE_PRICE)),
             TxnField.asset_receiver: Gtxn[0].sender(),
             TxnField.xfer_asset: App.globalGet(Bytes(GLOBAL_FUNDS_ASSET_ID)),
         }),
         InnerTxnBuilder.Submit(),
+
+        # decrease withdrawable amount
+        App.globalPut(
+            Bytes(GLOBAL_WITHDRAWABLE_AMOUNT),
+            Minus(
+                App.globalGet(Bytes(GLOBAL_WITHDRAWABLE_AMOUNT)),
+                Gtxn[1].asset_amount() * App.globalGet(Bytes(GLOBAL_SHARE_PRICE))
+            )
+        ),
 
         Approve()
     )

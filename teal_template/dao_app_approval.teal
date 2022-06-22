@@ -115,6 +115,15 @@ byte "FundsAssetId"
 app_global_get
 itxn_field XferAsset
 itxn_submit
+byte "WithdrawableAmount"
+byte "WithdrawableAmount"
+app_global_get
+gtxn 1 AssetAmount
+byte "SharePrice"
+app_global_get
+*
+-
+app_global_put
 int 1
 return
 main_l14:
@@ -131,12 +140,25 @@ byte "TargetEndDate"
 app_global_get
 >
 assert
+gtxna 0 ApplicationArgs 1
+btoi
+byte "WithdrawableAmount"
+app_global_get
+<=
+assert
 byte "Raised"
 app_global_get
 byte "Target"
 app_global_get
 >=
 assert
+byte "WithdrawableAmount"
+byte "WithdrawableAmount"
+app_global_get
+gtxna 0 ApplicationArgs 1
+btoi
+-
+app_global_put
 itxn_begin
 int axfer
 itxn_field TypeEnum
@@ -198,7 +220,7 @@ int 1
 return
 main_l16:
 global GroupSize
-int 3
+int 1
 ==
 assert
 gtxn 0 TypeEnum
@@ -213,76 +235,70 @@ gtxn 0 OnCompletion
 int NoOp
 ==
 assert
-gtxn 1 TypeEnum
-int axfer
-==
-assert
-gtxn 1 AssetAmount
-int 0
->
-assert
-gtxn 1 Sender
-byte "CustomerEscrowAddress"
-app_global_get
-==
-assert
-gtxn 1 XferAsset
-byte "FundsAssetId"
-app_global_get
-==
-assert
-gtxn 1 AssetReceiver
 global CurrentApplicationAddress
-==
-assert
-gtxn 1 Fee
-int 0
-==
-assert
-gtxn 1 AssetCloseTo
-global ZeroAddress
-==
-assert
-gtxn 1 RekeyTo
-global ZeroAddress
-==
-assert
-gtxn 1 Sender
-gtxn 2 Sender
-==
-assert
-gtxn 2 TypeEnum
-int axfer
-==
-assert
-gtxn 2 XferAsset
 byte "FundsAssetId"
 app_global_get
-==
-assert
-gtxn 2 AssetReceiver
-addr TMPL_CAPI_ESCROW_ADDRESS
-==
-assert
-gtxn 1 Sender
-gtxn 1 XferAsset
 asset_holding_get AssetBalance
 store 1
 store 0
-gtxn 2 AssetAmount
+byte "CentralReceivedTotal"
+byte "CentralReceivedTotal"
+app_global_get
 load 0
+byte "WithdrawableAmount"
+app_global_get
+-
+load 0
+byte "WithdrawableAmount"
+app_global_get
+-
 int TMPL_PRECISION__
 *
 int TMPL_CAPI_SHARE
 *
 int TMPL_PRECISION_SQUARE
 /
-==
-assert
-byte "CentralReceivedTotal"
-byte "CentralReceivedTotal"
+-
++
+app_global_put
+itxn_begin
+int axfer
+itxn_field TypeEnum
+load 0
+byte "WithdrawableAmount"
 app_global_get
-gtxn 1 AssetAmount
+-
+int TMPL_PRECISION__
+*
+int TMPL_CAPI_SHARE
+*
+int TMPL_PRECISION_SQUARE
+/
+itxn_field AssetAmount
+addr TMPL_CAPI_ESCROW_ADDRESS
+itxn_field AssetReceiver
+byte "FundsAssetId"
+app_global_get
+itxn_field XferAsset
+itxn_submit
+byte "WithdrawableAmount"
+byte "WithdrawableAmount"
+app_global_get
+load 0
+byte "WithdrawableAmount"
+app_global_get
+-
+load 0
+byte "WithdrawableAmount"
+app_global_get
+-
+int TMPL_PRECISION__
+*
+int TMPL_CAPI_SHARE
+*
+int TMPL_PRECISION_SQUARE
+/
+-
 +
 app_global_put
 int 1
@@ -351,6 +367,28 @@ gtxn 0 OnCompletion
 int NoOp
 ==
 assert
+gtxn 0 Sender
+byte "Shares"
+app_local_get
+int TMPL_PRECISION__
+*
+int TMPL_INVESTORS_SHARE
+*
+int TMPL_SHARE_SUPPLY
+/
+byte "CentralReceivedTotal"
+app_global_get
+*
+int TMPL_PRECISION_SQUARE
+/
+gtxn 0 Sender
+byte "ClaimedTotal"
+app_local_get
+-
+byte "WithdrawableAmount"
+app_global_get
+<=
+assert
 itxn_begin
 int axfer
 itxn_field TypeEnum
@@ -379,6 +417,29 @@ byte "FundsAssetId"
 app_global_get
 itxn_field XferAsset
 itxn_submit
+byte "WithdrawableAmount"
+byte "WithdrawableAmount"
+app_global_get
+gtxn 0 Sender
+byte "Shares"
+app_local_get
+int TMPL_PRECISION__
+*
+int TMPL_INVESTORS_SHARE
+*
+int TMPL_SHARE_SUPPLY
+/
+byte "CentralReceivedTotal"
+app_global_get
+*
+int TMPL_PRECISION_SQUARE
+/
+gtxn 0 Sender
+byte "ClaimedTotal"
+app_local_get
+-
+-
+app_global_put
 gtxn 0 Sender
 byte "ClaimedTotal"
 gtxn 0 Sender
@@ -525,6 +586,12 @@ gtxn 2 AssetReceiver
 global CurrentApplicationAddress
 ==
 assert
+byte "WithdrawableAmount"
+byte "WithdrawableAmount"
+app_global_get
+gtxn 2 AssetAmount
++
+app_global_put
 gtxn 0 Sender
 gtxn 1 Sender
 ==
@@ -643,6 +710,9 @@ btoi
 ==
 assert
 byte "CentralReceivedTotal"
+int 0
+app_global_put
+byte "WithdrawableAmount"
 int 0
 app_global_put
 byte "LockedShares"
