@@ -6,127 +6,53 @@ global GroupSize
 int 3
 ==
 &&
-bnz main_l24
+bnz main_l32
 global GroupSize
 int 3
 ==
-bnz main_l23
+bnz main_l29
 gtxn 0 OnCompletion
 int 4
 ==
-bnz main_l22
-gtxn 0 ApplicationID
-int 0
-==
-bnz main_l21
-gtxna 0 ApplicationArgs 0
-byte "optin"
-==
-bnz main_l20
-gtxna 0 ApplicationArgs 0
-byte "unlock"
-==
-bnz main_l19
-gtxna 0 ApplicationArgs 0
-byte "claim"
-==
-bnz main_l18
-gtxna 0 ApplicationArgs 0
-byte "lock"
-==
-bnz main_l17
-gtxna 0 ApplicationArgs 0
-byte "drain"
-==
-bnz main_l16
-gtxna 0 ApplicationArgs 0
-byte "update_data"
-==
-bnz main_l15
-gtxna 0 ApplicationArgs 0
-byte "withdraw"
-==
-bnz main_l14
-gtxna 0 ApplicationArgs 0
-byte "reclaim"
-==
-bnz main_l13
-err
-main_l13:
-global GroupSize
-int 2
-==
-assert
+bnz main_l28
 gtxn 0 TypeEnum
 int appl
 ==
-assert
 gtxn 0 ApplicationID
-global CurrentApplicationID
-==
-assert
-gtxn 0 OnCompletion
-int NoOp
-==
-assert
-gtxn 1 TypeEnum
-int axfer
-==
-assert
-gtxn 1 XferAsset
-byte "SharesAssetId"
-app_global_get
-==
-assert
-gtxn 1 AssetReceiver
-global CurrentApplicationAddress
-==
-assert
-gtxn 1 AssetAmount
 int 0
->
-assert
-gtxn 1 Sender
-gtxn 0 Sender
 ==
-assert
-global LatestTimestamp
-byte "TargetEndDate"
-app_global_get
->
-assert
-byte "Raised"
-app_global_get
-byte "Target"
-app_global_get
-<
-assert
-itxn_begin
-int axfer
-itxn_field TypeEnum
-gtxn 1 AssetAmount
-byte "SharePrice"
-app_global_get
-*
-itxn_field AssetAmount
-gtxn 0 Sender
-itxn_field AssetReceiver
-byte "FundsAssetId"
-app_global_get
-itxn_field XferAsset
-itxn_submit
-byte "WithdrawableAmount"
-byte "WithdrawableAmount"
-app_global_get
-gtxn 1 AssetAmount
-byte "SharePrice"
-app_global_get
-*
--
-app_global_put
-int 1
-return
-main_l14:
+&&
+bnz main_l27
+global GroupSize
+int 2
+==
+bnz main_l18
+gtxna 0 ApplicationArgs 0
+byte "optin"
+==
+bnz main_l17
+gtxna 0 ApplicationArgs 0
+byte "unlock"
+==
+bnz main_l16
+gtxna 0 ApplicationArgs 0
+byte "claim"
+==
+bnz main_l15
+gtxna 0 ApplicationArgs 0
+byte "drain"
+==
+bnz main_l14
+gtxna 0 ApplicationArgs 0
+byte "update_data"
+==
+bnz main_l13
+gtxna 0 ApplicationArgs 0
+byte "withdraw"
+==
+bnz main_l12
+err
+main_l12:
 global GroupSize
 int 1
 ==
@@ -173,11 +99,7 @@ itxn_field XferAsset
 itxn_submit
 int 1
 return
-main_l15:
-global GroupSize
-int 1
-==
-assert
+main_l13:
 gtxn 0 TypeEnum
 int appl
 ==
@@ -188,10 +110,6 @@ global CurrentApplicationID
 assert
 gtxn 0 OnCompletion
 int NoOp
-==
-assert
-gtxn 0 NumAppArgs
-int 6
 ==
 assert
 gtxn 0 Sender
@@ -213,9 +131,17 @@ app_global_put
 byte "Versions"
 gtxna 0 ApplicationArgs 5
 app_global_put
+global GroupSize
+int 1
+==
+assert
+gtxn 0 NumAppArgs
+int 6
+==
+assert
 int 1
 return
-main_l16:
+main_l14:
 global GroupSize
 int 1
 ==
@@ -300,54 +226,7 @@ int TMPL_PRECISION_SQUARE
 app_global_put
 int 1
 return
-main_l17:
-global GroupSize
-int 2
-==
-assert
-gtxn 0 TypeEnum
-int appl
-==
-assert
-gtxn 0 ApplicationID
-global CurrentApplicationID
-==
-assert
-gtxn 0 OnCompletion
-int NoOp
-==
-assert
-gtxn 0 NumAppArgs
-int 1
-==
-assert
-gtxn 1 TypeEnum
-int axfer
-==
-assert
-gtxn 1 XferAsset
-byte "SharesAssetId"
-app_global_get
-==
-assert
-gtxn 1 AssetReceiver
-global CurrentApplicationAddress
-==
-assert
-gtxn 1 AssetAmount
-int 0
->
-assert
-gtxn 0 Sender
-gtxn 1 Sender
-==
-assert
-gtxn 1 AssetAmount
-gtxn 0 Sender
-callsub lockshares_0
-int 1
-return
-main_l18:
+main_l15:
 global GroupSize
 int 1
 ==
@@ -464,7 +343,7 @@ app_local_get
 app_local_put
 int 1
 return
-main_l19:
+main_l16:
 global GroupSize
 int 1
 ==
@@ -506,7 +385,7 @@ app_local_get
 app_global_put
 int 1
 return
-main_l20:
+main_l17:
 global GroupSize
 int 1
 ==
@@ -525,14 +404,223 @@ int OptIn
 assert
 int 1
 return
-main_l21:
+main_l18:
+gtxn 0 TypeEnum
+int pay
+==
+bnz main_l24
+gtxna 0 ApplicationArgs 0
+byte "lock"
+==
+bnz main_l23
+gtxna 0 ApplicationArgs 0
+byte "reclaim"
+==
+bnz main_l22
+err
+main_l22:
 gtxn 0 TypeEnum
 int appl
 ==
 assert
+gtxn 0 ApplicationID
+global CurrentApplicationID
+==
+assert
+gtxn 0 OnCompletion
+int NoOp
+==
+assert
+gtxn 1 TypeEnum
+int axfer
+==
+assert
+gtxn 1 XferAsset
+byte "SharesAssetId"
+app_global_get
+==
+assert
+gtxn 1 AssetReceiver
+global CurrentApplicationAddress
+==
+assert
+gtxn 1 AssetAmount
+int 0
+>
+assert
+gtxn 1 Sender
+gtxn 0 Sender
+==
+assert
+global LatestTimestamp
+byte "TargetEndDate"
+app_global_get
+>
+assert
+byte "Raised"
+app_global_get
+byte "Target"
+app_global_get
+<
+assert
+itxn_begin
+int axfer
+itxn_field TypeEnum
+gtxn 1 AssetAmount
+byte "SharePrice"
+app_global_get
+*
+itxn_field AssetAmount
+gtxn 0 Sender
+itxn_field AssetReceiver
+byte "FundsAssetId"
+app_global_get
+itxn_field XferAsset
+itxn_submit
+byte "WithdrawableAmount"
+byte "WithdrawableAmount"
+app_global_get
+gtxn 1 AssetAmount
+byte "SharePrice"
+app_global_get
+*
+-
+app_global_put
 int 1
 return
-main_l22:
+main_l23:
+gtxn 0 TypeEnum
+int appl
+==
+assert
+gtxn 0 ApplicationID
+global CurrentApplicationID
+==
+assert
+gtxn 0 OnCompletion
+int NoOp
+==
+assert
+gtxn 0 NumAppArgs
+int 1
+==
+assert
+gtxn 1 TypeEnum
+int axfer
+==
+assert
+gtxn 1 XferAsset
+byte "SharesAssetId"
+app_global_get
+==
+assert
+gtxn 1 AssetReceiver
+global CurrentApplicationAddress
+==
+assert
+gtxn 1 AssetAmount
+int 0
+>
+assert
+gtxn 0 Sender
+gtxn 1 Sender
+==
+assert
+gtxn 1 AssetAmount
+gtxn 0 Sender
+callsub lockshares_0
+int 1
+return
+main_l24:
+gtxn 1 TypeEnum
+int appl
+==
+assert
+gtxn 1 ApplicationID
+global CurrentApplicationID
+==
+assert
+gtxn 1 OnCompletion
+int NoOp
+==
+assert
+gtxn 1 Sender
+global CreatorAddress
+==
+assert
+byte "DaoName"
+gtxna 1 ApplicationArgs 1
+app_global_put
+byte "DaoDesc"
+gtxna 1 ApplicationArgs 2
+app_global_put
+byte "LogoUrl"
+gtxna 1 ApplicationArgs 3
+app_global_put
+byte "SocialMediaUrl"
+gtxna 1 ApplicationArgs 4
+app_global_put
+byte "Versions"
+gtxna 1 ApplicationArgs 5
+app_global_put
+gtxn 0 TypeEnum
+int pay
+==
+assert
+gtxn 0 Receiver
+global CurrentApplicationAddress
+==
+assert
+gtxna 1 ApplicationArgs 0
+byte "update_data"
+==
+assert
+gtxn 1 NumAppArgs
+int 7
+==
+assert
+byte "ImageUrl"
+app_global_get
+gtxna 1 ApplicationArgs 6
+!=
+bnz main_l26
+main_l25:
+int 1
+return
+main_l26:
+byte "ImageUrl"
+gtxna 1 ApplicationArgs 6
+app_global_put
+itxn_begin
+int acfg
+itxn_field TypeEnum
+int 0
+itxn_field AssetAmount
+int 0
+itxn_field ConfigAssetDecimals
+int 1
+itxn_field ConfigAssetTotal
+gtxn 0 Sender
+itxn_field ConfigAssetManager
+int 0
+itxn_field ConfigAssetDefaultFrozen
+byte "IMG"
+itxn_field ConfigAssetUnitName
+byte "IMG"
+itxn_field ConfigAssetName
+gtxna 1 ApplicationArgs 6
+itxn_field ConfigAssetURL
+int 0
+itxn_field Fee
+itxn_submit
+byte "ImageAsset"
+itxn CreatedAssetID
+app_global_put
+b main_l25
+main_l27:
+int 1
+return
+main_l28:
 global GroupSize
 int 1
 ==
@@ -547,7 +635,7 @@ global CreatorAddress
 assert
 int 1
 return
-main_l23:
+main_l29:
 gtxn 0 TypeEnum
 int pay
 ==
@@ -571,6 +659,10 @@ assert
 gtxn 1 NumAppArgs
 int 11
 ==
+gtxn 1 NumAppArgs
+int 12
+==
+||
 assert
 gtxn 1 Sender
 global CreatorAddress
@@ -641,6 +733,11 @@ byte "SharesAssetId"
 app_global_get
 ==
 assert
+gtxn 1 NumAppArgs
+int 12
+==
+bnz main_l31
+main_l30:
 itxn_begin
 int axfer
 itxn_field TypeEnum
@@ -668,7 +765,37 @@ itxn_field Fee
 itxn_submit
 int 1
 return
-main_l24:
+main_l31:
+byte "ImageUrl"
+gtxna 1 ApplicationArgs 11
+app_global_put
+itxn_begin
+int acfg
+itxn_field TypeEnum
+int 0
+itxn_field AssetAmount
+int 0
+itxn_field ConfigAssetDecimals
+int 1
+itxn_field ConfigAssetTotal
+gtxn 0 Sender
+itxn_field ConfigAssetManager
+int 0
+itxn_field ConfigAssetDefaultFrozen
+byte "IMG"
+itxn_field ConfigAssetUnitName
+byte "IMG"
+itxn_field ConfigAssetName
+gtxna 1 ApplicationArgs 11
+itxn_field ConfigAssetURL
+int 0
+itxn_field Fee
+itxn_submit
+byte "ImageAsset"
+itxn CreatedAssetID
+app_global_put
+b main_l30
+main_l32:
 gtxn 0 TypeEnum
 int axfer
 ==

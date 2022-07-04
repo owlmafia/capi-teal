@@ -33,6 +33,9 @@ GLOBAL_TARGET = "Target"
 GLOBAL_TARGET_END_DATE = "TargetEndDate"
 GLOBAL_RAISED = "Raised"
 
+GLOBAL_IMAGE_ASSET_ID = "ImageAsset"
+GLOBAL_IMAGE_URL = "ImageUrl"
+
 GLOBAL_VERSIONS = "Versions"
 
 LOCAL_SHARES = "Shares"
@@ -41,7 +44,6 @@ LOCAL_CLAIMED_INIT = "ClaimedInit"
 
 def approval_program():
     handle_create = Seq(
-        Assert(Gtxn[0].type_enum() == TxnType.ApplicationCall),
         Approve()
     )
 
@@ -54,6 +56,26 @@ def approval_program():
         Approve()
     )
 
+    def setup_image_nft(url_bytes):
+        return Seq(
+            App.globalPut(Bytes(GLOBAL_IMAGE_URL), url_bytes),
+            InnerTxnBuilder.Begin(),
+            InnerTxnBuilder.SetFields({
+                TxnField.type_enum: TxnType.AssetConfig,
+                TxnField.asset_amount: Int(0),
+                TxnField.config_asset_decimals: Int(0),
+                TxnField.config_asset_total: Int(1),
+                TxnField.config_asset_manager: Gtxn[0].sender(),
+                TxnField.config_asset_default_frozen: Int(0),
+                TxnField.config_asset_unit_name: Bytes("IMG"),
+                TxnField.config_asset_name: Bytes("IMG"),
+                TxnField.config_asset_url: url_bytes,
+                TxnField.fee: Int(0)
+            }),
+            InnerTxnBuilder.Submit(),
+            App.globalPut(Bytes(GLOBAL_IMAGE_ASSET_ID), InnerTxn.created_asset_id())
+        )
+        
     handle_setup_dao = Seq(
         # creator sends min balance to app address
         Assert(Gtxn[0].type_enum() == TxnType.Payment),
@@ -63,7 +85,10 @@ def approval_program():
         Assert(Gtxn[1].type_enum() == TxnType.ApplicationCall),
         Assert(Gtxn[1].application_id() == Global.current_application_id()),
         Assert(Gtxn[1].on_completion() == OnComplete.NoOp),
-        Assert(Gtxn[1].application_args.length() == Int(11)),
+        Assert(Or(
+            Gtxn[1].application_args.length() == Int(11), 
+            Gtxn[1].application_args.length() == Int(12)
+        )),
         Assert(Gtxn[1].sender() == Global.creator_address()),
 
         # creator transfers shares (to be sold to investors) to app escrow
@@ -97,6 +122,10 @@ def approval_program():
 
         Assert(Gtxn[2].xfer_asset() == App.globalGet(Bytes(GLOBAL_SHARES_ASSET_ID))),
 
+        # create image nft
+        If(Gtxn[1].application_args.length() == Int(12))
+            .Then(setup_image_nft(Gtxn[1].application_args[11])),
+
         # creator's account setup
 
         InnerTxnBuilder.Begin(),
@@ -122,26 +151,52 @@ def approval_program():
         Approve()
     )
 
-    handle_update_data = Seq(
+    def handle_update_data_tx(tx):
+        return Seq(
+            # app call
+            Assert(tx.type_enum() == TxnType.ApplicationCall),
+            Assert(tx.application_id() == Global.current_application_id()),
+            Assert(tx.on_completion() == OnComplete.NoOp),
+            Assert(tx.sender() == Global.creator_address()),
+
+            # update data
+            App.globalPut(Bytes(GLOBAL_DAO_NAME), tx.application_args[1]),
+            App.globalPut(Bytes(GLOBAL_DAO_DESC), tx.application_args[2]),
+            # for now price is immutable, simplifies funds reclaiming
+            # App.globalPut(Bytes(GLOBAL_SHARE_PRICE), Btoi(tx.application_args[3])),
+            App.globalPut(Bytes(GLOBAL_LOGO_URL), tx.application_args[3]),
+            App.globalPut(Bytes(GLOBAL_SOCIAL_MEDIA_URL), tx.application_args[4]),
+            App.globalPut(Bytes(GLOBAL_VERSIONS), tx.application_args[5]),
+
+            # for now shares asset, funds asset and investor's part not updatable - have to think about implications
+        )
+
+    handle_update_data_basic = Seq(
+        handle_update_data_tx(Gtxn[0]),
+        # handle_update_data_common,
+
         Assert(Global.group_size() == Int(1)),
 
-        # app call
-        Assert(Gtxn[0].type_enum() == TxnType.ApplicationCall),
-        Assert(Gtxn[0].application_id() == Global.current_application_id()),
-        Assert(Gtxn[0].on_completion() == OnComplete.NoOp),
         Assert(Gtxn[0].application_args.length() == Int(6)),
-        Assert(Gtxn[0].sender() == Global.creator_address()),
 
-        # update data
-        App.globalPut(Bytes(GLOBAL_DAO_NAME), Gtxn[0].application_args[1]),
-        App.globalPut(Bytes(GLOBAL_DAO_DESC), Gtxn[0].application_args[2]),
-        # for now price is immutable, simplifies funds reclaiming
-        # App.globalPut(Bytes(GLOBAL_SHARE_PRICE), Btoi(Gtxn[0].application_args[3])),
-        App.globalPut(Bytes(GLOBAL_LOGO_URL), Gtxn[0].application_args[3]),
-        App.globalPut(Bytes(GLOBAL_SOCIAL_MEDIA_URL), Gtxn[0].application_args[4]),
-        App.globalPut(Bytes(GLOBAL_VERSIONS), Gtxn[0].application_args[5]),
+        Approve()
+    )
 
-        # for now shares asset, funds asset and investor's part not updatable - have to think about implications
+    handle_update_data_with_image = Seq(
+        handle_update_data_tx(Gtxn[1]),
+
+        # group size checked in cond
+
+        # increase min balance to hold new nft
+        Assert(Gtxn[0].type_enum() == TxnType.Payment),
+        Assert(Gtxn[0].receiver() == Global.current_application_address()),
+
+        # the first tx is the payment to increase min balance, to be able to hold an additional asset
+        Assert(Gtxn[1].application_args[0] == Bytes("update_data")),
+        Assert(Gtxn[1].application_args.length() == Int(7)),
+
+        If(App.globalGet(Bytes(GLOBAL_IMAGE_URL)) != Gtxn[1].application_args[6])
+            .Then(setup_image_nft(Gtxn[1].application_args[6])),
 
         Approve()
     )
@@ -298,8 +353,6 @@ def approval_program():
         )
 
     handle_lock = Seq(
-        Assert(Global.group_size() == Int(2)),
-
         # app call to update state
         Assert(Gtxn[0].type_enum() == TxnType.ApplicationCall),
         Assert(Gtxn[0].application_id() == Global.current_application_id()),
@@ -499,8 +552,6 @@ def approval_program():
     # note that for reclaim, we expect the user to have unlocked the shares
     # there's no direct path from locked shares to reclaiming in teal - the app can chain these steps
     handle_reclaim = Seq(
-        Assert(Global.group_size() == Int(2)),
-
         # app call
         Assert(Gtxn[0].type_enum() == TxnType.ApplicationCall),
         Assert(Gtxn[0].application_id() == Global.current_application_id()),
@@ -554,15 +605,22 @@ def approval_program():
         ), handle_invest],
         [Global.group_size() == Int(3), handle_setup_dao],
         [Gtxn[0].on_completion() == Int(4), handle_update],
-        [Gtxn[0].application_id() == Int(0), handle_create],
+        [And(
+            # app call to differentiate from update, where first tx is a payment
+            Gtxn[0].type_enum() == TxnType.ApplicationCall, 
+            Gtxn[0].application_id() == Int(0)
+        ), handle_create],
+        [Global.group_size() == Int(2), Cond(
+            [Gtxn[0].type_enum() == TxnType.Payment, handle_update_data_with_image],
+            [Gtxn[0].application_args[0] == Bytes("lock"), handle_lock],
+            [Gtxn[0].application_args[0] == Bytes("reclaim"), handle_reclaim],
+        )],
         [Gtxn[0].application_args[0] == Bytes("optin"), handle_optin],
         [Gtxn[0].application_args[0] == Bytes("unlock"), handle_unlock],
         [Gtxn[0].application_args[0] == Bytes("claim"), handle_claim],
-        [Gtxn[0].application_args[0] == Bytes("lock"), handle_lock],
         [Gtxn[0].application_args[0] == Bytes("drain"), handle_drain],
-        [Gtxn[0].application_args[0] == Bytes("update_data"), handle_update_data],
+        [Gtxn[0].application_args[0] == Bytes("update_data"), handle_update_data_basic],
         [Gtxn[0].application_args[0] == Bytes("withdraw"), handle_withdrawal],
-        [Gtxn[0].application_args[0] == Bytes("reclaim"), handle_reclaim],
     )
 
     return compileTeal(program, Mode.Application, version=6)
