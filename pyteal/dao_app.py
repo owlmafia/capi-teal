@@ -448,6 +448,10 @@ def approval_program():
         Approve()
     )
 
+    app_shares_balance = AssetHolding.balance(
+        Global.current_application_address(), App.globalGet(Bytes(GLOBAL_SHARES_ASSET_ID))
+    )
+
     handle_invest_calculated_share_amount = ScratchVar(TealType.uint64)
     # note that when investing (opposed to locking, where there's a shares xfer), 
     # the share amount is calculated here (based on sent funds and share price)
@@ -496,6 +500,16 @@ def approval_program():
 
         # sanity check: the bought share amount is > 0 (even if for whatever reason 0 was passed as expected/argument)
         Assert(handle_invest_calculated_share_amount.load() > Int(0)),
+
+        # needs to be listed like this, see: https://forum.algorand.org/t/using-global-get-ex-on-noop-call-giving-error-when-deploying-app/5314/2
+        # (app_escrow_funds_balance is used in handle_drain_not_yet_drained_amount)
+        app_shares_balance,
+
+        # the bought share amount is <= 0 shares for sale
+        Assert(handle_invest_calculated_share_amount.load() <= Minus(
+            app_shares_balance.value(),
+            App.globalGet(Bytes(GLOBAL_LOCKED_SHARES))
+        )),
 
         # update total raised amount
         App.globalPut(Bytes(GLOBAL_RAISED), Add(
