@@ -338,6 +338,7 @@ def approval_program():
                 Bytes(LOCAL_CLAIMED_TOTAL),
                 Minus(claimable_dividend, claimable_before_locking.load())
             ),
+            
             # remember initial already claimed local state
             App.localPut(
                 sender,
