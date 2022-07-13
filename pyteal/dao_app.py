@@ -122,9 +122,18 @@ def approval_program():
 
         Assert(Gtxn[2].xfer_asset() == App.globalGet(Bytes(GLOBAL_SHARES_ASSET_ID))),
 
-        # create image nft
+        # create image nft, is image url was passed
         If(Gtxn[1].application_args.length() == Int(12))
-            .Then(setup_image_nft(Gtxn[1].application_args[11])),
+            .Then(setup_image_nft(Gtxn[1].application_args[11]))
+            # if no image nft, initialize state with empty values
+            # we need this because we verify the global state length in the app
+            # and it's more reliable to have a fixed length than a range
+            .Else(
+                Seq(
+                    App.globalPut(Bytes(GLOBAL_IMAGE_URL), Bytes("")),
+                    App.globalPut(Bytes(GLOBAL_IMAGE_ASSET_ID), Int(0))
+                )
+            ),
 
         # creator's account setup
 

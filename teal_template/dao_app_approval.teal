@@ -6,7 +6,7 @@ global GroupSize
 int 3
 ==
 &&
-bnz main_l32
+bnz main_l33
 global GroupSize
 int 3
 ==
@@ -736,8 +736,14 @@ assert
 gtxn 1 NumAppArgs
 int 12
 ==
-bnz main_l31
-main_l30:
+bnz main_l32
+byte "ImageUrl"
+byte ""
+app_global_put
+byte "ImageAsset"
+int 0
+app_global_put
+main_l31:
 itxn_begin
 int axfer
 itxn_field TypeEnum
@@ -765,7 +771,7 @@ itxn_field Fee
 itxn_submit
 int 1
 return
-main_l31:
+main_l32:
 byte "ImageUrl"
 gtxna 1 ApplicationArgs 11
 app_global_put
@@ -794,8 +800,8 @@ itxn_submit
 byte "ImageAsset"
 itxn CreatedAssetID
 app_global_put
-b main_l30
-main_l32:
+b main_l31
+main_l33:
 gtxn 0 TypeEnum
 int axfer
 ==
