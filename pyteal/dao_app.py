@@ -30,6 +30,10 @@ GLOBAL_LOGO_URL = "LogoUrl"
 GLOBAL_SOCIAL_MEDIA_URL = "SocialMediaUrl"
 
 GLOBAL_TARGET = "Target"
+# Date where the dao was setup
+# it's likely possible to get this via indexer, instead of storing it in teal
+# but for now this seems fine - it's just 4 more lines in TEAL, less requests when loading a dao, and quicker to implement.
+GLOBAL_SETUP_DATE = "SetupDate"
 GLOBAL_TARGET_END_DATE = "TargetEndDate"
 GLOBAL_RAISED = "Raised"
 
@@ -86,8 +90,8 @@ def approval_program():
         Assert(Gtxn[1].application_id() == Global.current_application_id()),
         Assert(Gtxn[1].on_completion() == OnComplete.NoOp),
         Assert(Or(
-            Gtxn[1].application_args.length() == Int(11), 
-            Gtxn[1].application_args.length() == Int(12)
+            Gtxn[1].application_args.length() == Int(12), 
+            Gtxn[1].application_args.length() == Int(13)
         )),
         Assert(Gtxn[1].sender() == Global.creator_address()),
 
@@ -116,6 +120,8 @@ def approval_program():
         App.globalPut(Bytes(GLOBAL_TARGET), Btoi(Gtxn[1].application_args[9])),
         App.globalPut(Bytes(GLOBAL_TARGET_END_DATE), Btoi(Gtxn[1].application_args[10])),
 
+        App.globalPut(Bytes(GLOBAL_SETUP_DATE), Btoi(Gtxn[1].application_args[11])),
+
         App.globalPut(Bytes(GLOBAL_RAISED), Int(0)),
 
         # checks depending on global state
@@ -123,8 +129,8 @@ def approval_program():
         Assert(Gtxn[2].xfer_asset() == App.globalGet(Bytes(GLOBAL_SHARES_ASSET_ID))),
 
         # create image nft, is image url was passed
-        If(Gtxn[1].application_args.length() == Int(12))
-            .Then(setup_image_nft(Gtxn[1].application_args[11]))
+        If(Gtxn[1].application_args.length() == Int(13))
+            .Then(setup_image_nft(Gtxn[1].application_args[12]))
             # if no image nft, initialize state with empty values
             # we need this because we verify the global state length in the app
             # and it's more reliable to have a fixed length than a range
