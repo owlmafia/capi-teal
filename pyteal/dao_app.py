@@ -25,7 +25,6 @@ GLOBAL_SHARE_PRICE = "SharePrice"
 # % of income directed to investors
 GLOBAL_INVESTORS_PART = "InvestorsPart"
 
-GLOBAL_LOGO_URL = "LogoUrl"
 GLOBAL_SOCIAL_MEDIA_URL = "SocialMediaUrl"
 
 GLOBAL_TARGET = "Target"
@@ -89,8 +88,8 @@ def approval_program():
         Assert(Gtxn[1].application_id() == Global.current_application_id()),
         Assert(Gtxn[1].on_completion() == OnComplete.NoOp),
         Assert(Or(
-            Gtxn[1].application_args.length() == Int(12), 
-            Gtxn[1].application_args.length() == Int(13)
+            Gtxn[1].application_args.length() == Int(11), 
+            Gtxn[1].application_args.length() == Int(12)
         )),
         Assert(Gtxn[1].sender() == Global.creator_address()),
 
@@ -111,15 +110,14 @@ def approval_program():
         App.globalPut(Bytes(GLOBAL_SHARE_PRICE), Btoi(Gtxn[1].application_args[4])),
         App.globalPut(Bytes(GLOBAL_INVESTORS_PART), Btoi(Gtxn[1].application_args[5])),
 
-        App.globalPut(Bytes(GLOBAL_LOGO_URL), Gtxn[1].application_args[6]),
-        App.globalPut(Bytes(GLOBAL_SOCIAL_MEDIA_URL), Gtxn[1].application_args[7]),
+        App.globalPut(Bytes(GLOBAL_SOCIAL_MEDIA_URL), Gtxn[1].application_args[6]),
 
-        App.globalPut(Bytes(GLOBAL_VERSIONS), Gtxn[1].application_args[8]),
+        App.globalPut(Bytes(GLOBAL_VERSIONS), Gtxn[1].application_args[7]),
 
-        App.globalPut(Bytes(GLOBAL_TARGET), Btoi(Gtxn[1].application_args[9])),
-        App.globalPut(Bytes(GLOBAL_TARGET_END_DATE), Btoi(Gtxn[1].application_args[10])),
+        App.globalPut(Bytes(GLOBAL_TARGET), Btoi(Gtxn[1].application_args[8])),
+        App.globalPut(Bytes(GLOBAL_TARGET_END_DATE), Btoi(Gtxn[1].application_args[9])),
 
-        App.globalPut(Bytes(GLOBAL_SETUP_DATE), Btoi(Gtxn[1].application_args[11])),
+        App.globalPut(Bytes(GLOBAL_SETUP_DATE), Btoi(Gtxn[1].application_args[10])),
 
         App.globalPut(Bytes(GLOBAL_RAISED), Int(0)),
 
@@ -128,8 +126,8 @@ def approval_program():
         Assert(Gtxn[2].xfer_asset() == App.globalGet(Bytes(GLOBAL_SHARES_ASSET_ID))),
 
         # create image nft, is image url was passed
-        If(Gtxn[1].application_args.length() == Int(13))
-            .Then(setup_image_nft(Gtxn[1].application_args[12]))
+        If(Gtxn[1].application_args.length() == Int(12))
+            .Then(setup_image_nft(Gtxn[1].application_args[11]))
             # if no image nft, initialize state with empty values
             # we need this because we verify the global state length in the app
             # and it's more reliable to have a fixed length than a range
@@ -178,9 +176,8 @@ def approval_program():
             App.globalPut(Bytes(GLOBAL_DAO_DESC), tx.application_args[2]),
             # for now price is immutable, simplifies funds reclaiming
             # App.globalPut(Bytes(GLOBAL_SHARE_PRICE), Btoi(tx.application_args[3])),
-            App.globalPut(Bytes(GLOBAL_LOGO_URL), tx.application_args[3]),
-            App.globalPut(Bytes(GLOBAL_SOCIAL_MEDIA_URL), tx.application_args[4]),
-            App.globalPut(Bytes(GLOBAL_VERSIONS), tx.application_args[5]),
+            App.globalPut(Bytes(GLOBAL_SOCIAL_MEDIA_URL), tx.application_args[3]),
+            App.globalPut(Bytes(GLOBAL_VERSIONS), tx.application_args[4]),
 
             # for now shares asset, funds asset and investor's part not updatable - have to think about implications
         )
@@ -191,7 +188,7 @@ def approval_program():
 
         Assert(Global.group_size() == Int(1)),
 
-        Assert(Gtxn[0].application_args.length() == Int(6)),
+        Assert(Gtxn[0].application_args.length() == Int(5)),
 
         Approve()
     )
@@ -207,10 +204,10 @@ def approval_program():
 
         # the first tx is the payment to increase min balance, to be able to hold an additional asset
         Assert(Gtxn[1].application_args[0] == Bytes("update_data")),
-        Assert(Gtxn[1].application_args.length() == Int(7)),
+        Assert(Gtxn[1].application_args.length() == Int(6)),
 
-        If(App.globalGet(Bytes(GLOBAL_IMAGE_URL)) != Gtxn[1].application_args[6])
-            .Then(setup_image_nft(Gtxn[1].application_args[6])),
+        If(App.globalGet(Bytes(GLOBAL_IMAGE_URL)) != Gtxn[1].application_args[5])
+            .Then(setup_image_nft(Gtxn[1].application_args[5])),
 
         Approve()
     )

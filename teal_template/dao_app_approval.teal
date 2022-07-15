@@ -122,21 +122,18 @@ app_global_put
 byte "DaoDesc"
 gtxna 0 ApplicationArgs 2
 app_global_put
-byte "LogoUrl"
+byte "SocialMediaUrl"
 gtxna 0 ApplicationArgs 3
 app_global_put
-byte "SocialMediaUrl"
-gtxna 0 ApplicationArgs 4
-app_global_put
 byte "Versions"
-gtxna 0 ApplicationArgs 5
+gtxna 0 ApplicationArgs 4
 app_global_put
 global GroupSize
 int 1
 ==
 assert
 gtxn 0 NumAppArgs
-int 6
+int 5
 ==
 assert
 int 1
@@ -554,14 +551,11 @@ app_global_put
 byte "DaoDesc"
 gtxna 1 ApplicationArgs 2
 app_global_put
-byte "LogoUrl"
+byte "SocialMediaUrl"
 gtxna 1 ApplicationArgs 3
 app_global_put
-byte "SocialMediaUrl"
-gtxna 1 ApplicationArgs 4
-app_global_put
 byte "Versions"
-gtxna 1 ApplicationArgs 5
+gtxna 1 ApplicationArgs 4
 app_global_put
 gtxn 0 TypeEnum
 int pay
@@ -576,12 +570,12 @@ byte "update_data"
 ==
 assert
 gtxn 1 NumAppArgs
-int 7
+int 6
 ==
 assert
 byte "ImageUrl"
 app_global_get
-gtxna 1 ApplicationArgs 6
+gtxna 1 ApplicationArgs 5
 !=
 bnz main_l26
 main_l25:
@@ -589,7 +583,7 @@ int 1
 return
 main_l26:
 byte "ImageUrl"
-gtxna 1 ApplicationArgs 6
+gtxna 1 ApplicationArgs 5
 app_global_put
 itxn_begin
 int acfg
@@ -608,7 +602,7 @@ byte "IMG"
 itxn_field ConfigAssetUnitName
 byte "IMG"
 itxn_field ConfigAssetName
-gtxna 1 ApplicationArgs 6
+gtxna 1 ApplicationArgs 5
 itxn_field ConfigAssetURL
 int 0
 itxn_field Fee
@@ -657,10 +651,10 @@ int NoOp
 ==
 assert
 gtxn 1 NumAppArgs
-int 12
+int 11
 ==
 gtxn 1 NumAppArgs
-int 13
+int 12
 ==
 ||
 assert
@@ -708,25 +702,22 @@ byte "InvestorsPart"
 gtxna 1 ApplicationArgs 5
 btoi
 app_global_put
-byte "LogoUrl"
+byte "SocialMediaUrl"
 gtxna 1 ApplicationArgs 6
 app_global_put
-byte "SocialMediaUrl"
+byte "Versions"
 gtxna 1 ApplicationArgs 7
 app_global_put
-byte "Versions"
-gtxna 1 ApplicationArgs 8
-app_global_put
 byte "Target"
-gtxna 1 ApplicationArgs 9
+gtxna 1 ApplicationArgs 8
 btoi
 app_global_put
 byte "TargetEndDate"
-gtxna 1 ApplicationArgs 10
+gtxna 1 ApplicationArgs 9
 btoi
 app_global_put
 byte "SetupDate"
-gtxna 1 ApplicationArgs 11
+gtxna 1 ApplicationArgs 10
 btoi
 app_global_put
 byte "Raised"
@@ -738,7 +729,7 @@ app_global_get
 ==
 assert
 gtxn 1 NumAppArgs
-int 13
+int 12
 ==
 bnz main_l32
 byte "ImageUrl"
@@ -777,7 +768,7 @@ int 1
 return
 main_l32:
 byte "ImageUrl"
-gtxna 1 ApplicationArgs 12
+gtxna 1 ApplicationArgs 11
 app_global_put
 itxn_begin
 int acfg
@@ -796,7 +787,7 @@ byte "IMG"
 itxn_field ConfigAssetUnitName
 byte "IMG"
 itxn_field ConfigAssetName
-gtxna 1 ApplicationArgs 12
+gtxna 1 ApplicationArgs 11
 itxn_field ConfigAssetURL
 int 0
 itxn_field Fee
