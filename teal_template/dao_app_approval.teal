@@ -68,7 +68,7 @@ app_global_get
 assert
 gtxna 0 ApplicationArgs 1
 btoi
-byte "WithdrawableAmount"
+byte "AvailableAmount"
 app_global_get
 <=
 assert
@@ -78,8 +78,8 @@ byte "Target"
 app_global_get
 >=
 assert
-byte "WithdrawableAmount"
-byte "WithdrawableAmount"
+byte "AvailableAmount"
+byte "AvailableAmount"
 app_global_get
 gtxna 0 ApplicationArgs 1
 btoi
@@ -168,11 +168,11 @@ byte "CentralReceivedTotal"
 byte "CentralReceivedTotal"
 app_global_get
 load 0
-byte "WithdrawableAmount"
+byte "AvailableAmount"
 app_global_get
 -
 load 0
-byte "WithdrawableAmount"
+byte "AvailableAmount"
 app_global_get
 -
 int TMPL_PRECISION__
@@ -188,7 +188,7 @@ itxn_begin
 int axfer
 itxn_field TypeEnum
 load 0
-byte "WithdrawableAmount"
+byte "AvailableAmount"
 app_global_get
 -
 int TMPL_PRECISION__
@@ -204,15 +204,15 @@ byte "FundsAssetId"
 app_global_get
 itxn_field XferAsset
 itxn_submit
-byte "WithdrawableAmount"
-byte "WithdrawableAmount"
+byte "AvailableAmount"
+byte "AvailableAmount"
 app_global_get
 load 0
-byte "WithdrawableAmount"
+byte "AvailableAmount"
 app_global_get
 -
 load 0
-byte "WithdrawableAmount"
+byte "AvailableAmount"
 app_global_get
 -
 int TMPL_PRECISION__
@@ -261,7 +261,7 @@ gtxn 0 Sender
 byte "ClaimedTotal"
 app_local_get
 -
-byte "WithdrawableAmount"
+byte "AvailableAmount"
 app_global_get
 <=
 assert
@@ -293,8 +293,8 @@ byte "FundsAssetId"
 app_global_get
 itxn_field XferAsset
 itxn_submit
-byte "WithdrawableAmount"
-byte "WithdrawableAmount"
+byte "AvailableAmount"
+byte "AvailableAmount"
 app_global_get
 gtxn 0 Sender
 byte "Shares"
@@ -477,8 +477,8 @@ byte "FundsAssetId"
 app_global_get
 itxn_field XferAsset
 itxn_submit
-byte "WithdrawableAmount"
-byte "WithdrawableAmount"
+byte "AvailableAmount"
+byte "AvailableAmount"
 app_global_get
 gtxn 1 AssetAmount
 byte "SharePrice"
@@ -680,7 +680,7 @@ assert
 byte "CentralReceivedTotal"
 int 0
 app_global_put
-byte "WithdrawableAmount"
+byte "AvailableAmount"
 int 0
 app_global_put
 byte "LockedShares"
@@ -856,8 +856,8 @@ gtxn 2 AssetReceiver
 global CurrentApplicationAddress
 ==
 assert
-byte "WithdrawableAmount"
-byte "WithdrawableAmount"
+byte "AvailableAmount"
+byte "AvailableAmount"
 app_global_get
 gtxn 2 AssetAmount
 +

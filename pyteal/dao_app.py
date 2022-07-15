@@ -12,8 +12,7 @@ tmpl_investors_share = Tmpl.Int("TMPL_INVESTORS_SHARE")
 tmpl_share_supply = Tmpl.Int("TMPL_SHARE_SUPPLY")
 
 GLOBAL_RECEIVED_TOTAL = "CentralReceivedTotal"
-# TODO rename "available" amount: withdrawable is incorrect, withdraw can be blocked by funds end date too, and this amount is also claimable (dividend)
-GLOBAL_WITHDRAWABLE_AMOUNT = "WithdrawableAmount"
+GLOBAL_AVAILABLE_AMOUNT = "AvailableAmount"
 
 GLOBAL_SHARES_ASSET_ID = "SharesAssetId"
 GLOBAL_FUNDS_ASSET_ID = "FundsAssetId"
@@ -101,7 +100,7 @@ def approval_program():
 
         # initialize state
         App.globalPut(Bytes(GLOBAL_RECEIVED_TOTAL), Int(0)),
-        App.globalPut(Bytes(GLOBAL_WITHDRAWABLE_AMOUNT), Int(0)),
+        App.globalPut(Bytes(GLOBAL_AVAILABLE_AMOUNT), Int(0)),
         App.globalPut(Bytes(GLOBAL_LOCKED_SHARES), Int(0)),
 
         App.globalPut(Bytes(GLOBAL_SHARES_ASSET_ID), Btoi(Gtxn[1].application_args[0])),
@@ -289,10 +288,10 @@ def approval_program():
         Assert(Gtxn[0].application_id() == Global.current_application_id()),
         Assert(Gtxn[0].on_completion() == OnComplete.NoOp),
         
-        #TODO tests: can't withdraw and claim more than withdrawable amount
+        #TODO tests: can't withdraw and claim more than available amount
 
-        # has to be <= withdrawable amount
-        Assert(claimable_dividend <= App.globalGet(Bytes(GLOBAL_WITHDRAWABLE_AMOUNT))),
+        # has to be <= available amount
+        Assert(claimable_dividend <= App.globalGet(Bytes(GLOBAL_AVAILABLE_AMOUNT))),
 
         # send dividend to caller
         InnerTxnBuilder.Begin(),
@@ -305,14 +304,14 @@ def approval_program():
         }),
         InnerTxnBuilder.Submit(),
 
-        # decrease withdrawable amount
-        # no underflow possible, since we checked that claimable_dividend <= GLOBAL_WITHDRAWABLE_AMOUNT
+        # decrease available amount
+        # no underflow possible, since we checked that claimable_dividend <= GLOBAL_AVAILABLE_AMOUNT
         # NOTE: BEFORE updating LOCAL_CLAIMED_TOTAL, since we read it to calculate the current divident being claimed
         # (TODO above solved by using scratch?)
         App.globalPut(
-            Bytes(GLOBAL_WITHDRAWABLE_AMOUNT),
+            Bytes(GLOBAL_AVAILABLE_AMOUNT),
             Minus(
-                App.globalGet(Bytes(GLOBAL_WITHDRAWABLE_AMOUNT)),
+                App.globalGet(Bytes(GLOBAL_AVAILABLE_AMOUNT)),
                 claimable_dividend
             )
         ),
@@ -394,12 +393,13 @@ def approval_program():
         Global.current_application_address(), App.globalGet(Bytes(GLOBAL_FUNDS_ASSET_ID))
     )
 
+    # funds that are on the app's balance but haven't been drained (made available) yet
     # note that withdrawals don't affect this value, 
-    # as they're substracted atomically (in the withdrawal group) from both balance and GLOBAL_WITHDRAWABLE_AMOUNT
+    # as they're substracted atomically (in the withdrawal group) from both balance and GLOBAL_AVAILABLE_AMOUNT
     # so basic arithmetic: if we substract a value from both operands of a substraction, the result is unaffected
     handle_drain_not_yet_drained_amount = Minus(
         app_escrow_funds_balance.value(),
-        App.globalGet(Bytes(GLOBAL_WITHDRAWABLE_AMOUNT))
+        App.globalGet(Bytes(GLOBAL_AVAILABLE_AMOUNT))
     )
 
     def calculate_capi_fee(amount): 
@@ -436,7 +436,7 @@ def approval_program():
         ),
 
         # pay capi fee
-        # note BEFORE updating GLOBAL_WITHDRAWABLE_AMOUNT as it needs this state 
+        # note BEFORE updating GLOBAL_AVAILABLE_AMOUNT as it needs this state 
         # to calculate not yet drained amount  
         InnerTxnBuilder.Begin(),
         InnerTxnBuilder.SetFields({
@@ -447,15 +447,15 @@ def approval_program():
         }),
         InnerTxnBuilder.Submit(),
 
-        # increment withdrawable amount
+        # increment available amount
         # WA = WA + NYD (not yet drained) - fee on NYD
         # in words: by draining we make the "new income" (in prev. implementation, customer escrow balance) minus capi fee available to be withdrawn
         # note AFTER the inner tx, 
-        # which accesses GLOBAL_WITHDRAWABLE_AMOUNT to calculate the not yet drained amount / the capi fee
+        # which accesses GLOBAL_AVAILABLE_AMOUNT to calculate the not yet drained amount / the capi fee
         App.globalPut(
-            Bytes(GLOBAL_WITHDRAWABLE_AMOUNT),
+            Bytes(GLOBAL_AVAILABLE_AMOUNT),
             Add(
-                App.globalGet(Bytes(GLOBAL_WITHDRAWABLE_AMOUNT)),
+                App.globalGet(Bytes(GLOBAL_AVAILABLE_AMOUNT)),
                 Minus(handle_drain_not_yet_drained_amount, calculate_capi_fee(handle_drain_not_yet_drained_amount))
             )
         ),
@@ -492,12 +492,12 @@ def approval_program():
         Assert(Gtxn[2].xfer_asset() == App.globalGet(Bytes(GLOBAL_FUNDS_ASSET_ID))),
         Assert(Gtxn[2].asset_receiver() == Global.current_application_address()),
 
-        # increment withdrawable amount state
-        # investments don't pay capi fee or generate dividend, so are immediately withdrawable (don't have to be drained)
+        # increment available amount state
+        # investments don't pay capi fee or generate dividend, so are immediately available (don't have to be drained)
         App.globalPut(
-            Bytes(GLOBAL_WITHDRAWABLE_AMOUNT),
+            Bytes(GLOBAL_AVAILABLE_AMOUNT),
             Add(
-                App.globalGet(Bytes(GLOBAL_WITHDRAWABLE_AMOUNT)),
+                App.globalGet(Bytes(GLOBAL_AVAILABLE_AMOUNT)),
                 Gtxn[2].asset_amount()
             )
         ),
@@ -550,18 +550,18 @@ def approval_program():
         # has to be after min target end date
         Assert(Global.latest_timestamp() > App.globalGet(Bytes(GLOBAL_TARGET_END_DATE))),
 
-        # has to be <= withdrawable amount
-        Assert(Btoi(Gtxn[0].application_args[1]) <= App.globalGet(Bytes(GLOBAL_WITHDRAWABLE_AMOUNT))),
+        # has to be <= available amount
+        Assert(Btoi(Gtxn[0].application_args[1]) <= App.globalGet(Bytes(GLOBAL_AVAILABLE_AMOUNT))),
 
         # the min target was met
         # (if the target wasn't met, the project can't start and investors can reclaim their money)
         Assert(App.globalGet(Bytes(GLOBAL_RAISED)) >= App.globalGet(Bytes(GLOBAL_TARGET))),
 
-        # decrease withdrawable amount
+        # decrease available amount
         App.globalPut(
-            Bytes(GLOBAL_WITHDRAWABLE_AMOUNT),
+            Bytes(GLOBAL_AVAILABLE_AMOUNT),
             Minus(
-                App.globalGet(Bytes(GLOBAL_WITHDRAWABLE_AMOUNT)),
+                App.globalGet(Bytes(GLOBAL_AVAILABLE_AMOUNT)),
                 Btoi(Gtxn[0].application_args[1])
             )
         ),
@@ -616,11 +616,11 @@ def approval_program():
         }),
         InnerTxnBuilder.Submit(),
 
-        # decrease withdrawable amount
+        # decrease available amount
         App.globalPut(
-            Bytes(GLOBAL_WITHDRAWABLE_AMOUNT),
+            Bytes(GLOBAL_AVAILABLE_AMOUNT),
             Minus(
-                App.globalGet(Bytes(GLOBAL_WITHDRAWABLE_AMOUNT)),
+                App.globalGet(Bytes(GLOBAL_AVAILABLE_AMOUNT)),
                 Gtxn[1].asset_amount() * App.globalGet(Bytes(GLOBAL_SHARE_PRICE))
             )
         ),
