@@ -218,6 +218,17 @@ def approval_program():
         Assert(Gtxn[0].type_enum() == TxnType.ApplicationCall),
         Assert(Gtxn[0].application_id() == Global.current_application_id()),
         Assert(Gtxn[0].on_completion() == OnComplete.OptIn),
+
+        # initialize local state with default values
+        # why: for general sanity, our app checks always for expected local state length
+        # if investor interrups the investing flow after opting in, local state length will be 0
+        # and the app will throw an error when reading it
+        # we might remove these checks later, in which case this initialization can be removed
+        # we'll keep them for now, at least until ready for a security audit
+        App.localPut(Gtxn[0].sender(), Bytes(LOCAL_SHARES), Int(0)),
+        App.localPut(Gtxn[0].sender(), Bytes(LOCAL_CLAIMED_TOTAL), Int(0)),
+        App.localPut(Gtxn[0].sender(), Bytes(LOCAL_CLAIMED_INIT), Int(0)),
+
         Approve()
     )
 

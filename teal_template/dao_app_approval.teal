@@ -399,6 +399,18 @@ gtxn 0 OnCompletion
 int OptIn
 ==
 assert
+gtxn 0 Sender
+byte "Shares"
+int 0
+app_local_put
+gtxn 0 Sender
+byte "ClaimedTotal"
+int 0
+app_local_put
+gtxn 0 Sender
+byte "ClaimedInit"
+int 0
+app_local_put
 int 1
 return
 main_l18:
