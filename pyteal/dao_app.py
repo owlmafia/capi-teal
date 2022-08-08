@@ -48,6 +48,16 @@ LOCAL_SHARES = "Shares"
 LOCAL_CLAIMED_TOTAL = "ClaimedTotal"
 LOCAL_CLAIMED_INIT = "ClaimedInit"
 
+# Prospectus acknowledged by investor, when investing
+# Note: investor can store (by means other than our app) an inconsistent url-hash (teal can't prove this)
+# but they're not incentivized to do this: anyone can prove that the combination is invalid
+# as the url contains an IPFS CID which is also a hash of the document
+# (if the document that corresponds to the url/CID can't be hashed to our hash, it's invalid)
+# Note: we need a hash additionally to the CID, because the CID algorithm is IPFS specific and it's unclear how it works exactly
+LOCAL_SIGNED_PROSPECTUS_URL= "SignedProspectusUrl"
+LOCAL_SIGNED_PROSPECTUS_HASH= "SignedProspectusHash"
+LOCAL_SIGNED_PROSPECTUS_TIMESTAMP= "SignedProspectusTimestamp"
+
 def approval_program():
     handle_create = Seq(
         Approve()
@@ -118,6 +128,7 @@ def approval_program():
 
         App.globalPut(Bytes(GLOBAL_VERSIONS), Gtxn[1].application_args[7]),
 
+        Assert(Btoi(Gtxn[1].application_args[8]) > Int(0)), # sanity check: there should be always a (positive) funding target
         App.globalPut(Bytes(GLOBAL_TARGET), Btoi(Gtxn[1].application_args[8])),
         App.globalPut(Bytes(GLOBAL_TARGET_END_DATE), Btoi(Gtxn[1].application_args[9])),
 
@@ -498,7 +509,7 @@ def approval_program():
         Assert(Gtxn[1].type_enum() == TxnType.ApplicationCall),
         Assert(Gtxn[1].application_id() == Global.current_application_id()),
         Assert(Gtxn[1].on_completion() == OnComplete.NoOp),
-        Assert(Gtxn[1].application_args.length() == Int(2)),
+        Assert(Gtxn[1].application_args.length() == Int(5)),
 
         # investor pays for shares: funds xfer to app escrow
         Assert(Gtxn[2].type_enum() == TxnType.AssetTransfer),
@@ -551,6 +562,10 @@ def approval_program():
             handle_invest_calculated_share_amount.load(),
             Gtxn[0].sender()
         ),
+
+        App.localPut(Gtxn[0].sender(), Bytes(LOCAL_SIGNED_PROSPECTUS_URL), Gtxn[1].application_args[2]),
+        App.localPut(Gtxn[0].sender(), Bytes(LOCAL_SIGNED_PROSPECTUS_HASH), Gtxn[1].application_args[3]),
+        App.localPut(Gtxn[0].sender(), Bytes(LOCAL_SIGNED_PROSPECTUS_TIMESTAMP), Gtxn[1].application_args[4]),
 
         Approve()
     )
