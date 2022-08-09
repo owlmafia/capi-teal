@@ -41,6 +41,7 @@ GLOBAL_IMAGE_URL = "ImageUrl"
 # note that this is handled different than the image url - for the later,
 # we make it actually optional, to more easily detect here that it's not set and not create the NFT.
 GLOBAL_PROSPECTUS_URL = "ProspectusUrl"
+GLOBAL_PROSPECTUS_HASH = "ProspectusHash"
 
 GLOBAL_VERSIONS = "Versions"
 
@@ -102,8 +103,8 @@ def approval_program():
         Assert(Gtxn[1].application_id() == Global.current_application_id()),
         Assert(Gtxn[1].on_completion() == OnComplete.NoOp),
         Assert(Or(
-            Gtxn[1].application_args.length() == Int(12), 
-            Gtxn[1].application_args.length() == Int(13)
+            Gtxn[1].application_args.length() == Int(13), 
+            Gtxn[1].application_args.length() == Int(14)
         )),
         Assert(Gtxn[1].sender() == Global.creator_address()),
 
@@ -135,6 +136,7 @@ def approval_program():
         App.globalPut(Bytes(GLOBAL_SETUP_DATE), Btoi(Gtxn[1].application_args[10])),
 
         App.globalPut(Bytes(GLOBAL_PROSPECTUS_URL), Gtxn[1].application_args[11]),
+        App.globalPut(Bytes(GLOBAL_PROSPECTUS_HASH), Gtxn[1].application_args[12]),
 
         App.globalPut(Bytes(GLOBAL_RAISED), Int(0)),
 
@@ -143,8 +145,8 @@ def approval_program():
         Assert(Gtxn[2].xfer_asset() == App.globalGet(Bytes(GLOBAL_SHARES_ASSET_ID))),
 
         # create image nft, is image url was passed
-        If(Gtxn[1].application_args.length() == Int(13))
-            .Then(setup_image_nft(Gtxn[1].application_args[12]))
+        If(Gtxn[1].application_args.length() == Int(14))
+            .Then(setup_image_nft(Gtxn[1].application_args[13]))
             # if no image nft, initialize state with empty values
             # we need this because we verify the global state length in the app
             # and it's more reliable to have a fixed length than a range

@@ -663,10 +663,10 @@ int NoOp
 ==
 assert
 gtxn 1 NumAppArgs
-int 12
+int 13
 ==
 gtxn 1 NumAppArgs
-int 13
+int 14
 ==
 ||
 assert
@@ -740,6 +740,9 @@ app_global_put
 byte "ProspectusUrl"
 gtxna 1 ApplicationArgs 11
 app_global_put
+byte "ProspectusHash"
+gtxna 1 ApplicationArgs 12
+app_global_put
 byte "Raised"
 int 0
 app_global_put
@@ -749,7 +752,7 @@ app_global_get
 ==
 assert
 gtxn 1 NumAppArgs
-int 13
+int 14
 ==
 bnz main_l32
 byte "ImageUrl"
@@ -788,7 +791,7 @@ int 1
 return
 main_l32:
 byte "ImageUrl"
-gtxna 1 ApplicationArgs 12
+gtxna 1 ApplicationArgs 13
 app_global_put
 itxn_begin
 int acfg
@@ -807,7 +810,7 @@ byte "IMG"
 itxn_field ConfigAssetUnitName
 byte "IMG"
 itxn_field ConfigAssetName
-gtxna 1 ApplicationArgs 12
+gtxna 1 ApplicationArgs 13
 itxn_field ConfigAssetURL
 int 0
 itxn_field Fee
