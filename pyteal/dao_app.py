@@ -399,7 +399,7 @@ def approval_program():
         Assert(Gtxn[0].type_enum() == TxnType.ApplicationCall),
         Assert(Gtxn[0].application_id() == Global.current_application_id()),
         Assert(Gtxn[0].on_completion() == OnComplete.NoOp),
-        Assert(Gtxn[0].application_args.length() == Int(1)),
+        Assert(Gtxn[0].application_args.length() == Int(4)),
 
         # shares xfer to app
         Assert(Gtxn[1].type_enum() == TxnType.AssetTransfer),
@@ -412,6 +412,11 @@ def approval_program():
 
         # save shares on local state
         lock_shares(Gtxn[1].asset_amount(), Gtxn[0].sender()),
+
+        # save acked prospectus
+        App.localPut(Gtxn[0].sender(), Bytes(LOCAL_SIGNED_PROSPECTUS_URL), Gtxn[0].application_args[1]),
+        App.localPut(Gtxn[0].sender(), Bytes(LOCAL_SIGNED_PROSPECTUS_HASH), Gtxn[0].application_args[2]),
+        App.localPut(Gtxn[0].sender(), Bytes(LOCAL_SIGNED_PROSPECTUS_TIMESTAMP), Gtxn[0].application_args[3]),
 
         Approve()
     )
@@ -565,6 +570,7 @@ def approval_program():
             Gtxn[0].sender()
         ),
 
+        # save acked prospectus
         App.localPut(Gtxn[0].sender(), Bytes(LOCAL_SIGNED_PROSPECTUS_URL), Gtxn[1].application_args[2]),
         App.localPut(Gtxn[0].sender(), Bytes(LOCAL_SIGNED_PROSPECTUS_HASH), Gtxn[1].application_args[3]),
         App.localPut(Gtxn[0].sender(), Bytes(LOCAL_SIGNED_PROSPECTUS_TIMESTAMP), Gtxn[1].application_args[4]),

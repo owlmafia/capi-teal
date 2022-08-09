@@ -511,7 +511,7 @@ int NoOp
 ==
 assert
 gtxn 0 NumAppArgs
-int 1
+int 4
 ==
 assert
 gtxn 1 TypeEnum
@@ -538,6 +538,18 @@ assert
 gtxn 1 AssetAmount
 gtxn 0 Sender
 callsub lockshares_0
+gtxn 0 Sender
+byte "SignedProspectusUrl"
+gtxna 0 ApplicationArgs 1
+app_local_put
+gtxn 0 Sender
+byte "SignedProspectusHash"
+gtxna 0 ApplicationArgs 2
+app_local_put
+gtxn 0 Sender
+byte "SignedProspectusTimestamp"
+gtxna 0 ApplicationArgs 3
+app_local_put
 int 1
 return
 main_l24:
