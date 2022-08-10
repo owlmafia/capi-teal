@@ -10,6 +10,7 @@ tmpl_capi_share = Tmpl.Int("TMPL_CAPI_SHARE")
 tmpl_precision_square = Tmpl.Int("TMPL_PRECISION_SQUARE")
 tmpl_investors_share = Tmpl.Int("TMPL_INVESTORS_SHARE")
 tmpl_share_supply = Tmpl.Int("TMPL_SHARE_SUPPLY")
+tmpl_max_raisable_amount = Tmpl.Int("TMPL_MAX_RAISABLE_AMOUNT")
 
 GLOBAL_RECEIVED_TOTAL = "CentralReceivedTotal"
 GLOBAL_AVAILABLE_AMOUNT = "AvailableAmount"
@@ -570,6 +571,9 @@ def approval_program():
             App.globalGet(Bytes(GLOBAL_RAISED)),
             Gtxn[2].asset_amount()
         )),
+
+        # total raised is below or equal to max allowed amount (regulatory)
+        Assert(App.globalGet(Bytes(GLOBAL_RAISED)) <= tmpl_max_raisable_amount),
 
         # save shares on local state
         lock_shares(

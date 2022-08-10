@@ -923,6 +923,11 @@ app_global_get
 gtxn 2 AssetAmount
 +
 app_global_put
+byte "Raised"
+app_global_get
+int TMPL_MAX_RAISABLE_AMOUNT
+<=
+assert
 load 4
 gtxn 0 Sender
 callsub lockshares_0
