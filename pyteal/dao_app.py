@@ -627,6 +627,8 @@ def approval_program():
         Approve()
     )
 
+    # allow the investors to get their investments back if the funding target wasn't met
+    #
     # note that for reclaim, we expect the user to have unlocked the shares
     # there's no direct path from locked shares to reclaiming in teal - the app can chain these steps
     handle_reclaim = Seq(
