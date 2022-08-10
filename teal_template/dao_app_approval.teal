@@ -732,11 +732,6 @@ app_global_put
 byte "Versions"
 gtxna 1 ApplicationArgs 7
 app_global_put
-gtxna 1 ApplicationArgs 8
-btoi
-int 0
->
-assert
 byte "Target"
 gtxna 1 ApplicationArgs 8
 btoi

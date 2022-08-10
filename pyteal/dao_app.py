@@ -129,7 +129,14 @@ def approval_program():
 
         App.globalPut(Bytes(GLOBAL_VERSIONS), Gtxn[1].application_args[7]),
 
-        Assert(Btoi(Gtxn[1].application_args[8]) > Int(0)), # sanity check: there should be always a (positive) funding target
+        # for now commented: on one side backwards compatibility with tests,
+        # on the other, maybe we want to make funding target (and date) optional, 
+        # so the project can start immediately and raise funds indefinitely..
+        # (not sure whether this is legally possible)
+        # in any case: min funds target 0 and end date "now", makes it effectively optional 
+        # (as this moves the project effectively in "funds successfully raised" state)
+        # Assert(Btoi(Gtxn[1].application_args[8]) > Int(0)), # sanity check: there should be always a (positive) funding target
+
         App.globalPut(Bytes(GLOBAL_TARGET), Btoi(Gtxn[1].application_args[8])),
         App.globalPut(Bytes(GLOBAL_TARGET_END_DATE), Btoi(Gtxn[1].application_args[9])),
 
