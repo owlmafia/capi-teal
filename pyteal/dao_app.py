@@ -278,6 +278,15 @@ def approval_program():
         }),
         InnerTxnBuilder.Submit(),
 
+        # Don't allow to unlock until fund raising period ended.
+        # We need this to be able to set a max limit to shares that can be bought
+        # (that is, during the funds raising period, 
+        # it's still unclear, for legal and UX reasons, what to do in the time after, including whether it should be possible to invest at all (currently it is)).
+        # If the investor can't unlock, we can check the total shares in local state to prevent buying.
+        # If the investor were to be able to unlock, we wouldn't have anything to add to
+        # (note that asset balance doesn't work either, as after unlocking the user can transfer the shares to another account).
+        Assert(Global.latest_timestamp() > App.globalGet(Bytes(GLOBAL_TARGET_END_DATE))),        
+
         # TODO where is locked shares local state decremented? not tested?
 
         # decrement locked shares global state

@@ -372,6 +372,11 @@ itxn_field XferAsset
 int 0
 itxn_field Fee
 itxn_submit
+global LatestTimestamp
+byte "TargetEndDate"
+app_global_get
+>
+assert
 byte "LockedShares"
 byte "LockedShares"
 app_global_get
