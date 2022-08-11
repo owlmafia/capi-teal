@@ -692,10 +692,10 @@ int NoOp
 ==
 assert
 gtxn 1 NumAppArgs
-int 13
+int 15
 ==
 gtxn 1 NumAppArgs
-int 14
+int 16
 ==
 ||
 assert
@@ -770,13 +770,21 @@ app_global_put
 byte "Raised"
 int 0
 app_global_put
+byte "GlobalMinInvestAmount"
+gtxna 1 ApplicationArgs 13
+btoi
+app_global_put
+byte "GlobalMaxInvestAmount"
+gtxna 1 ApplicationArgs 14
+btoi
+app_global_put
 gtxn 2 XferAsset
 byte "SharesAssetId"
 app_global_get
 ==
 assert
 gtxn 1 NumAppArgs
-int 14
+int 16
 ==
 bnz main_l32
 byte "ImageUrl"
@@ -815,7 +823,7 @@ int 1
 return
 main_l32:
 byte "ImageUrl"
-gtxna 1 ApplicationArgs 13
+gtxna 1 ApplicationArgs 15
 app_global_put
 itxn_begin
 int acfg
@@ -834,7 +842,7 @@ byte "IMG"
 itxn_field ConfigAssetUnitName
 byte "IMG"
 itxn_field ConfigAssetName
-gtxna 1 ApplicationArgs 13
+gtxna 1 ApplicationArgs 15
 itxn_field ConfigAssetURL
 int 0
 itxn_field Fee
@@ -940,14 +948,25 @@ app_global_get
 gtxn 2 AssetAmount
 +
 app_global_put
-byte "Raised"
-app_global_get
+load 4
 int TMPL_MAX_RAISABLE_AMOUNT
 <=
 assert
 load 4
+byte "GlobalMinInvestAmount"
+app_global_get
+>=
+assert
+load 4
 gtxn 0 Sender
 callsub lockshares_0
+gtxn 0 Sender
+byte "Shares"
+app_local_get
+byte "GlobalMaxInvestAmount"
+app_global_get
+<=
+assert
 gtxn 0 Sender
 byte "SignedProspectusUrl"
 gtxna 1 ApplicationArgs 2

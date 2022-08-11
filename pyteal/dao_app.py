@@ -46,6 +46,9 @@ GLOBAL_PROSPECTUS_HASH = "ProspectusHash"
 
 GLOBAL_VERSIONS = "Versions"
 
+GLOBAL_MIN_INVEST_AMOUNT = "GlobalMinInvestAmount"
+GLOBAL_MAX_INVEST_AMOUNT = "GlobalMaxInvestAmount"
+
 LOCAL_SHARES = "Shares"
 LOCAL_CLAIMED_TOTAL = "ClaimedTotal"
 LOCAL_CLAIMED_INIT = "ClaimedInit"
@@ -104,8 +107,8 @@ def approval_program():
         Assert(Gtxn[1].application_id() == Global.current_application_id()),
         Assert(Gtxn[1].on_completion() == OnComplete.NoOp),
         Assert(Or(
-            Gtxn[1].application_args.length() == Int(13), 
-            Gtxn[1].application_args.length() == Int(14)
+            Gtxn[1].application_args.length() == Int(15), 
+            Gtxn[1].application_args.length() == Int(16)
         )),
         Assert(Gtxn[1].sender() == Global.creator_address()),
 
@@ -148,13 +151,17 @@ def approval_program():
 
         App.globalPut(Bytes(GLOBAL_RAISED), Int(0)),
 
+        App.globalPut(Bytes(GLOBAL_MIN_INVEST_AMOUNT), Btoi(Gtxn[1].application_args[13])),
+        App.globalPut(Bytes(GLOBAL_MAX_INVEST_AMOUNT), Btoi(Gtxn[1].application_args[14])),
+
+
         # checks depending on global state
 
         Assert(Gtxn[2].xfer_asset() == App.globalGet(Bytes(GLOBAL_SHARES_ASSET_ID))),
 
         # create image nft, is image url was passed
-        If(Gtxn[1].application_args.length() == Int(14))
-            .Then(setup_image_nft(Gtxn[1].application_args[13]))
+        If(Gtxn[1].application_args.length() == Int(16))
+            .Then(setup_image_nft(Gtxn[1].application_args[15]))
             # if no image nft, initialize state with empty values
             # we need this because we verify the global state length in the app
             # and it's more reliable to have a fixed length than a range
@@ -585,13 +592,20 @@ def approval_program():
         )),
 
         # total raised is below or equal to max allowed amount (regulatory)
-        Assert(App.globalGet(Bytes(GLOBAL_RAISED)) <= tmpl_max_raisable_amount),
+        Assert(handle_invest_calculated_share_amount.load() <= tmpl_max_raisable_amount),
+
+        # is investing more than min amount (share amount)
+        Assert(handle_invest_calculated_share_amount.load() >= App.globalGet(Bytes(GLOBAL_MIN_INVEST_AMOUNT))),
 
         # save shares on local state
         lock_shares(
             handle_invest_calculated_share_amount.load(),
             Gtxn[0].sender()
         ),
+
+        # has invested (is investing + possibly has invested before) less or same than max amount (share amount) 
+        # NOTE this check has to be AFTER lock_shares, as it expects LOCAL_SHARES to be incremented (by invested amount)
+        Assert(App.localGet(Gtxn[0].sender(), Bytes(LOCAL_SHARES)) <= App.globalGet(Bytes(GLOBAL_MAX_INVEST_AMOUNT))),
 
         # save acked prospectus
         App.localPut(Gtxn[0].sender(), Bytes(LOCAL_SIGNED_PROSPECTUS_URL), Gtxn[1].application_args[2]),
