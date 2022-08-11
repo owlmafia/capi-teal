@@ -416,6 +416,18 @@ gtxn 0 Sender
 byte "ClaimedInit"
 int 0
 app_local_put
+gtxn 0 Sender
+byte "SignedProspectusUrl"
+byte ""
+app_local_put
+gtxn 0 Sender
+byte "SignedProspectusHash"
+byte ""
+app_local_put
+gtxn 0 Sender
+byte "SignedProspectusTimestamp"
+byte ""
+app_local_put
 int 1
 return
 main_l18:

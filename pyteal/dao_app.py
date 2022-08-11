@@ -255,6 +255,9 @@ def approval_program():
         App.localPut(Gtxn[0].sender(), Bytes(LOCAL_SHARES), Int(0)),
         App.localPut(Gtxn[0].sender(), Bytes(LOCAL_CLAIMED_TOTAL), Int(0)),
         App.localPut(Gtxn[0].sender(), Bytes(LOCAL_CLAIMED_INIT), Int(0)),
+        App.localPut(Gtxn[0].sender(), Bytes(LOCAL_SIGNED_PROSPECTUS_URL), Bytes("")),
+        App.localPut(Gtxn[0].sender(), Bytes(LOCAL_SIGNED_PROSPECTUS_HASH), Bytes("")),
+        App.localPut(Gtxn[0].sender(), Bytes(LOCAL_SIGNED_PROSPECTUS_TIMESTAMP), Bytes("")),
 
         Approve()
     )
