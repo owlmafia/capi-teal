@@ -572,7 +572,7 @@ def approval_program():
         # (app_escrow_funds_balance is used in handle_drain_not_yet_drained_amount)
         app_shares_balance,
 
-        # the bought share amount is <= 0 shares for sale
+        # the bought share amount is <= shares for sale (balance - locked -> not locked, i.e. available for sale)
         Assert(handle_invest_calculated_share_amount.load() <= Minus(
             app_shares_balance.value(),
             App.globalGet(Bytes(GLOBAL_LOCKED_SHARES))
