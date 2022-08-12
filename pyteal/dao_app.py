@@ -214,6 +214,12 @@ def approval_program():
             App.globalPut(Bytes(GLOBAL_VERSIONS), tx.application_args[4]),
 
             # for now shares asset, funds asset and investor's part not updatable - have to think about implications
+
+            App.globalPut(Bytes(GLOBAL_PROSPECTUS_URL), tx.application_args[5]),
+            App.globalPut(Bytes(GLOBAL_PROSPECTUS_HASH), tx.application_args[6]),
+
+            App.globalPut(Bytes(GLOBAL_MIN_INVEST_AMOUNT), Btoi(tx.application_args[7])),
+            App.globalPut(Bytes(GLOBAL_MAX_INVEST_AMOUNT), Btoi(tx.application_args[8])),
         )
 
     handle_update_data_basic = Seq(
@@ -222,7 +228,7 @@ def approval_program():
 
         Assert(Global.group_size() == Int(1)),
 
-        Assert(Gtxn[0].application_args.length() == Int(5)),
+        Assert(Gtxn[0].application_args.length() == Int(9)),
 
         Approve()
     )
@@ -238,10 +244,10 @@ def approval_program():
 
         # the first tx is the payment to increase min balance, to be able to hold an additional asset
         Assert(Gtxn[1].application_args[0] == Bytes("update_data")),
-        Assert(Gtxn[1].application_args.length() == Int(6)),
+        Assert(Gtxn[1].application_args.length() == Int(10)),
 
-        If(App.globalGet(Bytes(GLOBAL_IMAGE_URL)) != Gtxn[1].application_args[5])
-            .Then(setup_image_nft(Gtxn[1].application_args[5])),
+        If(App.globalGet(Bytes(GLOBAL_IMAGE_URL)) != Gtxn[1].application_args[9])
+            .Then(setup_image_nft(Gtxn[1].application_args[9])),
 
         Approve()
     )
