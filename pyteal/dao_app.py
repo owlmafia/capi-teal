@@ -4,6 +4,7 @@ from functions.asset_checks import *
 from functions.constants import *
 from functions.payments import *
 from functions.inner_txs import *
+from functions.state import *
 
 """App central approval"""
 
@@ -37,21 +38,21 @@ def approval_program():
         Assert(Gtxn[2].xfer_asset() == Btoi(Gtxn[1].application_args[0])),
 
         # initialize state
-        App.globalPut(Bytes(GLOBAL_RECEIVED_TOTAL), Int(0)),
-        App.globalPut(Bytes(GLOBAL_AVAILABLE_AMOUNT), Int(0)),
-        App.globalPut(Bytes(GLOBAL_LOCKED_SHARES), Int(0)),
+        set_gs(GLOBAL_RECEIVED_TOTAL, Int(0)),
+        set_gs(GLOBAL_AVAILABLE_AMOUNT, Int(0)),
+        set_gs(GLOBAL_LOCKED_SHARES, Int(0)),
 
-        App.globalPut(Bytes(GLOBAL_SHARES_ASSET_ID), Btoi(Gtxn[1].application_args[0])),
-        App.globalPut(Bytes(GLOBAL_FUNDS_ASSET_ID), Btoi(Gtxn[1].application_args[1])),
+        set_gs(GLOBAL_SHARES_ASSET_ID, Btoi(Gtxn[1].application_args[0])),
+        set_gs(GLOBAL_FUNDS_ASSET_ID, Btoi(Gtxn[1].application_args[1])),
 
-        App.globalPut(Bytes(GLOBAL_DAO_NAME), Gtxn[1].application_args[2]),
-        App.globalPut(Bytes(GLOBAL_DAO_DESC), Gtxn[1].application_args[3]),
-        App.globalPut(Bytes(GLOBAL_SHARE_PRICE), Btoi(Gtxn[1].application_args[4])),
-        App.globalPut(Bytes(GLOBAL_INVESTORS_PART), Btoi(Gtxn[1].application_args[5])),
+        set_gs(GLOBAL_DAO_NAME, Gtxn[1].application_args[2]),
+        set_gs(GLOBAL_DAO_DESC, Gtxn[1].application_args[3]),
+        set_gs(GLOBAL_SHARE_PRICE, Btoi(Gtxn[1].application_args[4])),
+        set_gs(GLOBAL_INVESTORS_PART, Btoi(Gtxn[1].application_args[5])),
 
-        App.globalPut(Bytes(GLOBAL_SOCIAL_MEDIA_URL), Gtxn[1].application_args[6]),
+        set_gs(GLOBAL_SOCIAL_MEDIA_URL, Gtxn[1].application_args[6]),
 
-        App.globalPut(Bytes(GLOBAL_VERSIONS), Gtxn[1].application_args[7]),
+        set_gs(GLOBAL_VERSIONS, Gtxn[1].application_args[7]),
 
         # for now commented: on one side backwards compatibility with tests,
         # on the other, maybe we want to make funding target (and date) optional, 
@@ -61,23 +62,23 @@ def approval_program():
         # (as this moves the project effectively in "funds successfully raised" state)
         # Assert(Btoi(Gtxn[1].application_args[8]) > Int(0)), # sanity check: there should be always a (positive) funding target
 
-        App.globalPut(Bytes(GLOBAL_TARGET), Btoi(Gtxn[1].application_args[8])),
-        App.globalPut(Bytes(GLOBAL_TARGET_END_DATE), Btoi(Gtxn[1].application_args[9])),
+        set_gs(GLOBAL_TARGET, Btoi(Gtxn[1].application_args[8])),
+        set_gs(GLOBAL_TARGET_END_DATE, Btoi(Gtxn[1].application_args[9])),
 
-        App.globalPut(Bytes(GLOBAL_SETUP_DATE), Btoi(Gtxn[1].application_args[10])),
+        set_gs(GLOBAL_SETUP_DATE, Btoi(Gtxn[1].application_args[10])),
 
-        App.globalPut(Bytes(GLOBAL_PROSPECTUS_URL), Gtxn[1].application_args[11]),
-        App.globalPut(Bytes(GLOBAL_PROSPECTUS_HASH), Gtxn[1].application_args[12]),
+        set_gs(GLOBAL_PROSPECTUS_URL, Gtxn[1].application_args[11]),
+        set_gs(GLOBAL_PROSPECTUS_HASH, Gtxn[1].application_args[12]),
 
-        App.globalPut(Bytes(GLOBAL_RAISED), Int(0)),
+        set_gs(GLOBAL_RAISED, Int(0)),
 
-        App.globalPut(Bytes(GLOBAL_MIN_INVEST_AMOUNT), Btoi(Gtxn[1].application_args[13])),
-        App.globalPut(Bytes(GLOBAL_MAX_INVEST_AMOUNT), Btoi(Gtxn[1].application_args[14])),
+        set_gs(GLOBAL_MIN_INVEST_AMOUNT, Btoi(Gtxn[1].application_args[13])),
+        set_gs(GLOBAL_MAX_INVEST_AMOUNT, Btoi(Gtxn[1].application_args[14])),
 
 
         # checks depending on global state
 
-        Assert(Gtxn[2].xfer_asset() == App.globalGet(Bytes(GLOBAL_SHARES_ASSET_ID))),
+        Assert(Gtxn[2].xfer_asset() == get_gs(GLOBAL_SHARES_ASSET_ID)),
 
         # create image nft, is image url was passed
         If(Gtxn[1].application_args.length() == Int(16))
@@ -87,16 +88,16 @@ def approval_program():
             # and it's more reliable to have a fixed length than a range
             .Else(
                 Seq(
-                    App.globalPut(Bytes(GLOBAL_IMAGE_URL), Bytes("")),
-                    App.globalPut(Bytes(GLOBAL_IMAGE_ASSET_ID), Int(0))
+                    set_gs(GLOBAL_IMAGE_URL, Bytes("")),
+                    set_gs(GLOBAL_IMAGE_ASSET_ID, Int(0))
                 )
             ),
 
         # creator's account setup
 
         setup_dao_optins(
-            App.globalGet(Bytes(GLOBAL_FUNDS_ASSET_ID)),
-            App.globalGet(Bytes(GLOBAL_SHARES_ASSET_ID))
+            get_gs(GLOBAL_FUNDS_ASSET_ID),
+            get_gs(GLOBAL_SHARES_ASSET_ID)
         ),
 
         Approve()
@@ -108,20 +109,20 @@ def approval_program():
             is_app_call_noop_this_app_by_creator(tx),
 
             # update data
-            App.globalPut(Bytes(GLOBAL_DAO_NAME), tx.application_args[1]),
-            App.globalPut(Bytes(GLOBAL_DAO_DESC), tx.application_args[2]),
+            set_gs(GLOBAL_DAO_NAME, tx.application_args[1]),
+            set_gs(GLOBAL_DAO_DESC, tx.application_args[2]),
             # for now price is immutable, simplifies funds reclaiming
-            # App.globalPut(Bytes(GLOBAL_SHARE_PRICE), Btoi(tx.application_args[3])),
-            App.globalPut(Bytes(GLOBAL_SOCIAL_MEDIA_URL), tx.application_args[3]),
-            App.globalPut(Bytes(GLOBAL_VERSIONS), tx.application_args[4]),
+            # set_gs(GLOBAL_SHARE_PRICE), Btoi(tx.application_args[3])),
+            set_gs(GLOBAL_SOCIAL_MEDIA_URL, tx.application_args[3]),
+            set_gs(GLOBAL_VERSIONS, tx.application_args[4]),
 
             # for now shares asset, funds asset and investor's part not updatable - have to think about implications
 
-            App.globalPut(Bytes(GLOBAL_PROSPECTUS_URL), tx.application_args[5]),
-            App.globalPut(Bytes(GLOBAL_PROSPECTUS_HASH), tx.application_args[6]),
+            set_gs(GLOBAL_PROSPECTUS_URL, tx.application_args[5]),
+            set_gs(GLOBAL_PROSPECTUS_HASH, tx.application_args[6]),
 
-            App.globalPut(Bytes(GLOBAL_MIN_INVEST_AMOUNT), Btoi(tx.application_args[7])),
-            App.globalPut(Bytes(GLOBAL_MAX_INVEST_AMOUNT), Btoi(tx.application_args[8])),
+            set_gs(GLOBAL_MIN_INVEST_AMOUNT, Btoi(tx.application_args[7])),
+            set_gs(GLOBAL_MAX_INVEST_AMOUNT, Btoi(tx.application_args[8])),
         )
 
     handle_update_data_basic = Seq(
@@ -147,7 +148,7 @@ def approval_program():
         Assert(Gtxn[1].application_args[0] == Bytes("update_data")),
         Assert(Gtxn[1].application_args.length() == Int(10)),
 
-        If(App.globalGet(Bytes(GLOBAL_IMAGE_URL)) != Gtxn[1].application_args[9])
+        If(get_gs(GLOBAL_IMAGE_URL) != Gtxn[1].application_args[9])
             .Then(setup_image_nft(Gtxn[1].application_args[9])),
 
         Approve()
@@ -185,7 +186,7 @@ def approval_program():
         # shares xfer to the investor
         send_asset(
             Gtxn[0].sender(), 
-            App.globalGet(Bytes(GLOBAL_SHARES_ASSET_ID)), 
+            get_gs(GLOBAL_SHARES_ASSET_ID), 
             App.localGet(Gtxn[0].sender(), Bytes(LOCAL_SHARES))
         ),
 
@@ -196,18 +197,15 @@ def approval_program():
         # If the investor can't unlock, we can check the total shares in local state to prevent buying.
         # If the investor were to be able to unlock, we wouldn't have anything to add to
         # (note that asset balance doesn't work either, as after unlocking the user can transfer the shares to another account).
-        Assert(Global.latest_timestamp() > App.globalGet(Bytes(GLOBAL_TARGET_END_DATE))),        
+        Assert(Global.latest_timestamp() > get_gs(GLOBAL_TARGET_END_DATE)),        
 
         # TODO where is locked shares local state decremented? not tested?
 
         # decrement locked shares global state
-        App.globalPut(
-            Bytes(GLOBAL_LOCKED_SHARES),
-            Minus(
-                App.globalGet(Bytes(GLOBAL_LOCKED_SHARES)),
-                App.localGet(Gtxn[0].sender(), Bytes(LOCAL_SHARES))
-            )
-        ),
+        set_gs(GLOBAL_LOCKED_SHARES, Minus(
+            get_gs(GLOBAL_LOCKED_SHARES),
+            App.localGet(Gtxn[0].sender(), Bytes(LOCAL_SHARES))
+        )),
 
         Approve()
     )
@@ -223,7 +221,7 @@ def approval_program():
                 ),
                 tmpl_share_supply
             ),
-            App.globalGet(Bytes(GLOBAL_RECEIVED_TOTAL))
+            get_gs(GLOBAL_RECEIVED_TOTAL)
         ),
         tmpl_precision_square
     )
@@ -244,12 +242,12 @@ def approval_program():
         #TODO tests: can't withdraw and claim more than available amount
 
         # has to be <= available amount
-        Assert(claimable_dividend <= App.globalGet(Bytes(GLOBAL_AVAILABLE_AMOUNT))),
+        Assert(claimable_dividend <= get_gs(GLOBAL_AVAILABLE_AMOUNT)),
 
         # send dividend to caller
         send_asset_no_set_fee(
             Gtxn[0].sender(), 
-            App.globalGet(Bytes(GLOBAL_FUNDS_ASSET_ID)), 
+            get_gs(GLOBAL_FUNDS_ASSET_ID), 
             claimable_dividend
         ),
 
@@ -257,13 +255,10 @@ def approval_program():
         # no underflow possible, since we checked that claimable_dividend <= GLOBAL_AVAILABLE_AMOUNT
         # NOTE: BEFORE updating LOCAL_CLAIMED_TOTAL, since we read it to calculate the current divident being claimed
         # (TODO above solved by using scratch?)
-        App.globalPut(
-            Bytes(GLOBAL_AVAILABLE_AMOUNT),
-            Minus(
-                App.globalGet(Bytes(GLOBAL_AVAILABLE_AMOUNT)),
+        set_gs(GLOBAL_AVAILABLE_AMOUNT, Minus(
+                get_gs(GLOBAL_AVAILABLE_AMOUNT),
                 claimable_dividend
-            )
-        ),
+        )),
 
         # update local state with retrieved dividend
         App.localPut(
@@ -310,10 +305,10 @@ def approval_program():
             ),
 
             # increment locked shares global state
-            App.globalPut(
-                Bytes(GLOBAL_LOCKED_SHARES),
-                Add(App.globalGet(Bytes(GLOBAL_LOCKED_SHARES)), share_amount)
-            ),
+            set_gs(GLOBAL_LOCKED_SHARES, Add(
+                get_gs(GLOBAL_LOCKED_SHARES), 
+                share_amount
+            )),
         )
 
     handle_lock = Seq(
@@ -341,7 +336,7 @@ def approval_program():
     )
 
     app_escrow_funds_balance = AssetHolding.balance(
-        Global.current_application_address(), App.globalGet(Bytes(GLOBAL_FUNDS_ASSET_ID))
+        Global.current_application_address(), get_gs(GLOBAL_FUNDS_ASSET_ID)
     )
 
     # funds that are on the app's balance but haven't been drained (made available) yet
@@ -350,7 +345,7 @@ def approval_program():
     # so basic arithmetic: if we substract a value from both operands of a substraction, the result is unaffected
     handle_drain_not_yet_drained_amount = Minus(
         app_escrow_funds_balance.value(),
-        App.globalGet(Bytes(GLOBAL_AVAILABLE_AMOUNT))
+        get_gs(GLOBAL_AVAILABLE_AMOUNT)
     )
 
     def calculate_capi_fee(amount): 
@@ -376,20 +371,17 @@ def approval_program():
         app_escrow_funds_balance,
 
         # increment total received
-        App.globalPut(
-            Bytes(GLOBAL_RECEIVED_TOTAL),
-            Add(
-                App.globalGet(Bytes(GLOBAL_RECEIVED_TOTAL)),
-                Minus(handle_drain_not_yet_drained_amount, calculate_capi_fee(handle_drain_not_yet_drained_amount))
-            )
-        ),
+        set_gs(GLOBAL_RECEIVED_TOTAL, Add(
+            get_gs(GLOBAL_RECEIVED_TOTAL),
+            Minus(handle_drain_not_yet_drained_amount, calculate_capi_fee(handle_drain_not_yet_drained_amount))
+        )),
 
         # pay capi fee
         # note BEFORE updating GLOBAL_AVAILABLE_AMOUNT as it needs this state 
         # to calculate not yet drained amount  
         send_asset_no_set_fee(
             tmpl_capi_escrow_address,
-            App.globalGet(Bytes(GLOBAL_FUNDS_ASSET_ID)), 
+            get_gs(GLOBAL_FUNDS_ASSET_ID), 
             calculate_capi_fee(handle_drain_not_yet_drained_amount)
         ),
 
@@ -398,19 +390,16 @@ def approval_program():
         # in words: by draining we make the "new income" (in prev. implementation, customer escrow balance) minus capi fee available to be withdrawn
         # note AFTER the inner tx, 
         # which accesses GLOBAL_AVAILABLE_AMOUNT to calculate the not yet drained amount / the capi fee
-        App.globalPut(
-            Bytes(GLOBAL_AVAILABLE_AMOUNT),
-            Add(
-                App.globalGet(Bytes(GLOBAL_AVAILABLE_AMOUNT)),
-                Minus(handle_drain_not_yet_drained_amount, calculate_capi_fee(handle_drain_not_yet_drained_amount))
-            )
-        ),
+        set_gs(GLOBAL_AVAILABLE_AMOUNT, Add(
+            get_gs(GLOBAL_AVAILABLE_AMOUNT),
+            Minus(handle_drain_not_yet_drained_amount, calculate_capi_fee(handle_drain_not_yet_drained_amount))
+        )),
 
         Approve()
     )
 
     app_shares_balance = AssetHolding.balance(
-        Global.current_application_address(), App.globalGet(Bytes(GLOBAL_SHARES_ASSET_ID))
+        Global.current_application_address(), get_gs(GLOBAL_SHARES_ASSET_ID)
     )
 
     handle_invest_calculated_share_amount = ScratchVar(TealType.uint64)
@@ -436,13 +425,10 @@ def approval_program():
 
         # increment available amount state
         # investments don't pay capi fee or generate dividend, so are immediately available (don't have to be drained)
-        App.globalPut(
-            Bytes(GLOBAL_AVAILABLE_AMOUNT),
-            Add(
-                App.globalGet(Bytes(GLOBAL_AVAILABLE_AMOUNT)),
-                Gtxn[2].asset_amount()
-            )
-        ),
+        set_gs(GLOBAL_AVAILABLE_AMOUNT, Add(
+            get_gs(GLOBAL_AVAILABLE_AMOUNT),
+            Gtxn[2].asset_amount()
+        )),
 
         # the investor sends all txs
         Assert(Gtxn[0].sender() == Gtxn[1].sender()),
@@ -465,12 +451,12 @@ def approval_program():
         # the bought share amount is <= shares for sale (balance - locked -> not locked, i.e. available for sale)
         Assert(handle_invest_calculated_share_amount.load() <= Minus(
             app_shares_balance.value(),
-            App.globalGet(Bytes(GLOBAL_LOCKED_SHARES))
+            get_gs(GLOBAL_LOCKED_SHARES)
         )),
 
         # update total raised amount
-        App.globalPut(Bytes(GLOBAL_RAISED), Add(
-            App.globalGet(Bytes(GLOBAL_RAISED)),
+        set_gs(GLOBAL_RAISED, Add(
+            get_gs(GLOBAL_RAISED),
             Gtxn[2].asset_amount()
         )),
 
@@ -478,7 +464,7 @@ def approval_program():
         Assert(handle_invest_calculated_share_amount.load() <= tmpl_max_raisable_amount),
 
         # is investing more than min amount (share amount)
-        Assert(handle_invest_calculated_share_amount.load() >= App.globalGet(Bytes(GLOBAL_MIN_INVEST_AMOUNT))),
+        Assert(handle_invest_calculated_share_amount.load() >= get_gs(GLOBAL_MIN_INVEST_AMOUNT)),
 
         # save shares on local state
         lock_shares(
@@ -488,7 +474,7 @@ def approval_program():
 
         # has invested (is investing + possibly has invested before) less or same than max amount (share amount) 
         # NOTE this check has to be AFTER lock_shares, as it expects LOCAL_SHARES to be incremented (by invested amount)
-        Assert(App.localGet(Gtxn[0].sender(), Bytes(LOCAL_SHARES)) <= App.globalGet(Bytes(GLOBAL_MAX_INVEST_AMOUNT))),
+        Assert(App.localGet(Gtxn[0].sender(), Bytes(LOCAL_SHARES)) <= get_gs(GLOBAL_MAX_INVEST_AMOUNT)),
 
         # save acked prospectus
         App.localPut(Gtxn[0].sender(), Bytes(LOCAL_SIGNED_PROSPECTUS_URL), Gtxn[1].application_args[2]),
@@ -505,28 +491,25 @@ def approval_program():
         Assert(Gtxn[0].sender() == Global.creator_address()),
 
         # has to be after min target end date
-        Assert(Global.latest_timestamp() > App.globalGet(Bytes(GLOBAL_TARGET_END_DATE))),
+        Assert(Global.latest_timestamp() > get_gs(GLOBAL_TARGET_END_DATE)),
 
         # has to be <= available amount
-        Assert(Btoi(Gtxn[0].application_args[1]) <= App.globalGet(Bytes(GLOBAL_AVAILABLE_AMOUNT))),
+        Assert(Btoi(Gtxn[0].application_args[1]) <= get_gs(GLOBAL_AVAILABLE_AMOUNT)),
 
         # the min target was met
         # (if the target wasn't met, the project can't start and investors can reclaim their money)
-        Assert(App.globalGet(Bytes(GLOBAL_RAISED)) >= App.globalGet(Bytes(GLOBAL_TARGET))),
+        Assert(get_gs(GLOBAL_RAISED) >= get_gs(GLOBAL_TARGET)),
 
         # decrease available amount
-        App.globalPut(
-            Bytes(GLOBAL_AVAILABLE_AMOUNT),
-            Minus(
-                App.globalGet(Bytes(GLOBAL_AVAILABLE_AMOUNT)),
-                Btoi(Gtxn[0].application_args[1])
-            )
-        ),
+        set_gs(GLOBAL_AVAILABLE_AMOUNT, Minus(
+            get_gs(GLOBAL_AVAILABLE_AMOUNT),
+            Btoi(Gtxn[0].application_args[1])
+        )),
 
         # send the funds to the withdrawer
         send_asset_no_set_fee(
             Gtxn[0].sender(),
-            App.globalGet(Bytes(GLOBAL_FUNDS_ASSET_ID)),
+            get_gs(GLOBAL_FUNDS_ASSET_ID),
             Btoi(Gtxn[0].application_args[1])
         ),
 
@@ -548,32 +531,29 @@ def approval_program():
         Assert(Gtxn[1].sender() == Gtxn[0].sender()),
 
         # reclaiming after min target end date
-        Assert(Global.latest_timestamp() > App.globalGet(Bytes(GLOBAL_TARGET_END_DATE))),
+        Assert(Global.latest_timestamp() > get_gs(GLOBAL_TARGET_END_DATE)),
 
         # min target wasn't met
         Assert(
             # NOTE that raised funds currently means only investments.
             # regular payments (which could be donations) sent to the app's escrow or the customer escrow are ignored here
             # (the UI doesn't support donations (yet?), but they're of course technically possible)
-            App.globalGet(Bytes(GLOBAL_RAISED)) < App.globalGet(Bytes(GLOBAL_TARGET))
+            get_gs(GLOBAL_RAISED) < get_gs(GLOBAL_TARGET)
         ),
 
         # send paid funds back
         send_asset_no_set_fee(
             Gtxn[0].sender(),
-            App.globalGet(Bytes(GLOBAL_FUNDS_ASSET_ID)),
+            get_gs(GLOBAL_FUNDS_ASSET_ID),
             # TODO scratch?
-            Gtxn[1].asset_amount() * App.globalGet(Bytes(GLOBAL_SHARE_PRICE)),
+            Gtxn[1].asset_amount() * get_gs(GLOBAL_SHARE_PRICE),
         ),
 
         # decrease available amount
-        App.globalPut(
-            Bytes(GLOBAL_AVAILABLE_AMOUNT),
-            Minus(
-                App.globalGet(Bytes(GLOBAL_AVAILABLE_AMOUNT)),
-                Gtxn[1].asset_amount() * App.globalGet(Bytes(GLOBAL_SHARE_PRICE))
-            )
-        ),
+        set_gs(GLOBAL_AVAILABLE_AMOUNT, Minus(
+            get_gs(GLOBAL_AVAILABLE_AMOUNT),
+            Gtxn[1].asset_amount() * get_gs(GLOBAL_SHARE_PRICE)
+        )),
 
         Approve()
     )
