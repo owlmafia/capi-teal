@@ -9,6 +9,7 @@ from domain.setup_dao import *
 from domain.update_dao import *
 from domain.lock import *
 from domain.investor_optin import *
+from common.general import *
 
 """App central approval"""
 
@@ -18,7 +19,7 @@ def approval_program():
     )
 
     handle_update = Seq(
-        Assert(Global.group_size() == Int(1)),
+        is_group_size(1),
 
         is_app_call_by_creator(Gtxn[0]),
 
@@ -80,7 +81,7 @@ def approval_program():
         handle_update_data_tx(Gtxn[0]),
         # handle_update_data_common,
 
-        Assert(Global.group_size() == Int(1)),
+        is_group_size(1),
 
         Assert(Gtxn[0].application_args.length() == Int(9)),
 
@@ -106,7 +107,7 @@ def approval_program():
     )
 
     handle_optin = Seq(
-        Assert(Global.group_size() == Int(1)),
+        is_group_size(1),
 
         is_this_app_call(Gtxn[0]),
         Assert(Gtxn[0].on_completion() == OnComplete.OptIn),
@@ -117,7 +118,7 @@ def approval_program():
     )
 
     handle_unlock = Seq(
-        Assert(Global.group_size() == Int(1)),
+        is_group_size(1),
 
         # app call to opt-out
         is_this_app_call(Gtxn[0]),
@@ -174,7 +175,7 @@ def approval_program():
     )
 
     handle_claim = Seq(
-        Assert(Global.group_size() == Int(1)),
+        is_group_size(1),
 
         # app call
         is_this_noop_app_call(Gtxn[0]),
@@ -299,7 +300,7 @@ def approval_program():
     handle_drain = Seq(
         # handle_drain_capi_fee.store(calculate_capi_fee(handle_drain_not_yet_drained_amount)),
         
-        Assert(Global.group_size() == Int(1)),
+        is_group_size(1),
 
         # app call
         is_this_noop_app_call(Gtxn[0]),
@@ -344,7 +345,7 @@ def approval_program():
     # note that when investing (opposed to locking, where there's a shares xfer), 
     # the share amount is calculated here (based on sent funds and share price)
     handle_invest = Seq(
-        # Assert(Global.group_size() == Int(3)), # used as condition
+        # is_group_size(3), # used as condition
 
         # investor opts-in to shares (needs to be before app call with inner tx sending the asset)
         # optin to shares
@@ -421,7 +422,7 @@ def approval_program():
     )
 
     handle_withdrawal = Seq(
-        Assert(Global.group_size() == Int(1)),
+        is_group_size(1),
 
         # only the owner can withdraw
         Assert(Gtxn[0].sender() == Global.creator_address()),
