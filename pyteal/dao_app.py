@@ -1,4 +1,5 @@
 from pyteal import *
+from common import *
 
 """App central approval"""
 
@@ -71,8 +72,7 @@ def approval_program():
     handle_update = Seq(
         Assert(Global.group_size() == Int(1)),
 
-        Assert(Gtxn[0].type_enum() == TxnType.ApplicationCall),
-        Assert(Gtxn[0].sender() == Global.creator_address()),
+        is_app_call_by_creator(Gtxn[0]),
 
         Approve()
     )
@@ -103,14 +103,11 @@ def approval_program():
         Assert(Gtxn[0].receiver() == Global.current_application_address()),
 
         # app call
-        Assert(Gtxn[1].type_enum() == TxnType.ApplicationCall),
-        Assert(Gtxn[1].application_id() == Global.current_application_id()),
-        Assert(Gtxn[1].on_completion() == OnComplete.NoOp),
+        is_app_call_noop_this_app_by_creator(Gtxn[1]),
         Assert(Or(
             Gtxn[1].application_args.length() == Int(15), 
             Gtxn[1].application_args.length() == Int(16)
         )),
-        Assert(Gtxn[1].sender() == Global.creator_address()),
 
         # creator transfers shares (to be sold to investors) to app escrow
         Assert(Gtxn[2].type_enum() == TxnType.AssetTransfer),
@@ -200,10 +197,7 @@ def approval_program():
     def handle_update_data_tx(tx):
         return Seq(
             # app call
-            Assert(tx.type_enum() == TxnType.ApplicationCall),
-            Assert(tx.application_id() == Global.current_application_id()),
-            Assert(tx.on_completion() == OnComplete.NoOp),
-            Assert(tx.sender() == Global.creator_address()),
+            is_app_call_noop_this_app_by_creator(tx),
 
             # update data
             App.globalPut(Bytes(GLOBAL_DAO_NAME), tx.application_args[1]),
@@ -255,8 +249,7 @@ def approval_program():
     handle_optin = Seq(
         Assert(Global.group_size() == Int(1)),
 
-        Assert(Gtxn[0].type_enum() == TxnType.ApplicationCall),
-        Assert(Gtxn[0].application_id() == Global.current_application_id()),
+        is_this_app_call(Gtxn[0]),
         Assert(Gtxn[0].on_completion() == OnComplete.OptIn),
 
         # initialize local state with default values
@@ -279,9 +272,8 @@ def approval_program():
         Assert(Global.group_size() == Int(1)),
 
         # app call to opt-out
-        Assert(Gtxn[0].type_enum() == TxnType.ApplicationCall),
+        is_this_app_call(Gtxn[0]),
         Assert(Gtxn[0].on_completion() == OnComplete.CloseOut),
-        Assert(Gtxn[0].application_id() == Global.current_application_id()),
 
         # shares xfer to the investor
         InnerTxnBuilder.Begin(),
@@ -344,9 +336,7 @@ def approval_program():
         Assert(Global.group_size() == Int(1)),
 
         # app call
-        Assert(Gtxn[0].type_enum() == TxnType.ApplicationCall),
-        Assert(Gtxn[0].application_id() == Global.current_application_id()),
-        Assert(Gtxn[0].on_completion() == OnComplete.NoOp),
+        is_this_noop_app_call(Gtxn[0]),
         
         #TODO tests: can't withdraw and claim more than available amount
 
@@ -429,9 +419,7 @@ def approval_program():
 
     handle_lock = Seq(
         # app call to update state
-        Assert(Gtxn[0].type_enum() == TxnType.ApplicationCall),
-        Assert(Gtxn[0].application_id() == Global.current_application_id()),
-        Assert(Gtxn[0].on_completion() == OnComplete.NoOp),
+        is_this_noop_app_call(Gtxn[0]),
         Assert(Gtxn[0].application_args.length() == Int(4)),
 
         # shares xfer to app
@@ -483,9 +471,7 @@ def approval_program():
         Assert(Global.group_size() == Int(1)),
 
         # app call
-        Assert(Gtxn[0].type_enum() == TxnType.ApplicationCall),
-        Assert(Gtxn[0].application_id() == Global.current_application_id()),
-        Assert(Gtxn[0].on_completion() == OnComplete.NoOp),
+        is_this_noop_app_call(Gtxn[0]),
 
         # needs to be listed like this, see: https://forum.algorand.org/t/using-global-get-ex-on-noop-call-giving-error-when-deploying-app/5314/2
         # (app_escrow_funds_balance is used in handle_drain_not_yet_drained_amount)
@@ -546,9 +532,7 @@ def approval_program():
         Assert(Gtxn[0].asset_receiver() == Gtxn[0].sender()),
 
         # app call to initialize shares state
-        Assert(Gtxn[1].type_enum() == TxnType.ApplicationCall),
-        Assert(Gtxn[1].application_id() == Global.current_application_id()),
-        Assert(Gtxn[1].on_completion() == OnComplete.NoOp),
+        is_this_noop_app_call(Gtxn[1]),
         Assert(Gtxn[1].application_args.length() == Int(5)),
 
         # investor pays for shares: funds xfer to app escrow
@@ -665,9 +649,7 @@ def approval_program():
     # there's no direct path from locked shares to reclaiming in teal - the app can chain these steps
     handle_reclaim = Seq(
         # app call
-        Assert(Gtxn[0].type_enum() == TxnType.ApplicationCall),
-        Assert(Gtxn[0].application_id() == Global.current_application_id()),
-        Assert(Gtxn[0].on_completion() == OnComplete.NoOp),
+        is_this_noop_app_call(Gtxn[0]),
 
         # shares being sent back
         Assert(Gtxn[1].type_enum() == TxnType.AssetTransfer),
@@ -719,6 +701,7 @@ def approval_program():
         [Gtxn[0].on_completion() == Int(4), handle_update],
         [And(
             # app call to differentiate from update, where first tx is a payment
+            # TODO how do we make is_app_call usable both here and in the other (embedded in Seq) expressions?,
             Gtxn[0].type_enum() == TxnType.ApplicationCall, 
             Gtxn[0].application_id() == Int(0)
         ), handle_create],
