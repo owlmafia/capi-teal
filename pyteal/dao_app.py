@@ -498,7 +498,7 @@ def export(path, output):
         print("Wrote TEAL to: " + path)
 
 
-export("teal_template/dao_app_approval_tmp.teal", approval_program())
-export("teal_template/dao_app_clear_tmp.teal", clear_program())
+export("teal_template/dao_app_approval.teal", approval_program())
+export("teal_template/dao_app_clear.teal", clear_program())
 
 print("Done! Wrote dao approval and clear TEAL")
