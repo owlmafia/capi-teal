@@ -152,22 +152,25 @@ def approval_program():
         Approve()
     )
 
+    handle_claim_claimable_dividend = ScratchVar(TealType.uint64)
     handle_claim = Seq(
         is_group_size(1),
 
         # app call
         is_this_noop_app_call(Gtxn[0]),
+
+        handle_claim_claimable_dividend.store(calc_claimable_dividend(Gtxn[0].sender())),
         
         #TODO tests: can't withdraw and claim more than available amount
 
         # has to be <= available amount
-        Assert(calc_claimable_dividend(Gtxn[0].sender()) <= get_gs(GLOBAL_AVAILABLE_AMOUNT)),
+        Assert(handle_claim_claimable_dividend.load() <= get_gs(GLOBAL_AVAILABLE_AMOUNT)),
 
         # send dividend to caller
         send_asset_no_set_fee(
             Gtxn[0].sender(), 
             get_gs(GLOBAL_FUNDS_ASSET_ID), 
-            calc_claimable_dividend(Gtxn[0].sender())
+            handle_claim_claimable_dividend.load()
         ),
 
         # decrease available amount
@@ -176,7 +179,7 @@ def approval_program():
         # (TODO above solved by using scratch?)
         set_gs(GLOBAL_AVAILABLE_AMOUNT, Minus(
                 get_gs(GLOBAL_AVAILABLE_AMOUNT),
-                calc_claimable_dividend(Gtxn[0].sender())
+                handle_claim_claimable_dividend.load()
         )),
 
         # update local state with retrieved dividend
@@ -185,7 +188,7 @@ def approval_program():
             Bytes(LOCAL_CLAIMED_TOTAL),
             Add(
                 App.localGet(Gtxn[0].sender(), Bytes(LOCAL_CLAIMED_TOTAL)),
-                calc_claimable_dividend(Gtxn[0].sender())
+                handle_claim_claimable_dividend.load()
             )
         ),
 

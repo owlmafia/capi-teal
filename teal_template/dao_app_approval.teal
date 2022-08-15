@@ -173,16 +173,16 @@ global CurrentApplicationAddress
 byte "FundsAssetId"
 app_global_get
 asset_holding_get AssetBalance
+store 2
 store 1
-store 0
 byte "CentralReceivedTotal"
 byte "CentralReceivedTotal"
 app_global_get
-load 0
+load 1
 byte "AvailableAmount"
 app_global_get
 -
-load 0
+load 1
 byte "AvailableAmount"
 app_global_get
 -
@@ -200,7 +200,7 @@ int axfer
 itxn_field TypeEnum
 addr TMPL_CAPI_ESCROW_ADDRESS
 itxn_field AssetReceiver
-load 0
+load 1
 byte "AvailableAmount"
 app_global_get
 -
@@ -218,11 +218,11 @@ itxn_submit
 byte "AvailableAmount"
 byte "AvailableAmount"
 app_global_get
-load 0
+load 1
 byte "AvailableAmount"
 app_global_get
 -
-load 0
+load 1
 byte "AvailableAmount"
 app_global_get
 -
@@ -272,6 +272,8 @@ gtxn 0 Sender
 byte "ClaimedTotal"
 app_local_get
 -
+store 0
+load 0
 byte "AvailableAmount"
 app_global_get
 <=
@@ -281,24 +283,7 @@ int axfer
 itxn_field TypeEnum
 gtxn 0 Sender
 itxn_field AssetReceiver
-gtxn 0 Sender
-byte "Shares"
-app_local_get
-int TMPL_PRECISION__
-*
-int TMPL_INVESTORS_SHARE
-*
-int TMPL_SHARE_SUPPLY
-/
-byte "CentralReceivedTotal"
-app_global_get
-*
-int TMPL_PRECISION_SQUARE
-/
-gtxn 0 Sender
-byte "ClaimedTotal"
-app_local_get
--
+load 0
 itxn_field AssetAmount
 byte "FundsAssetId"
 app_global_get
@@ -307,24 +292,7 @@ itxn_submit
 byte "AvailableAmount"
 byte "AvailableAmount"
 app_global_get
-gtxn 0 Sender
-byte "Shares"
-app_local_get
-int TMPL_PRECISION__
-*
-int TMPL_INVESTORS_SHARE
-*
-int TMPL_SHARE_SUPPLY
-/
-byte "CentralReceivedTotal"
-app_global_get
-*
-int TMPL_PRECISION_SQUARE
-/
-gtxn 0 Sender
-byte "ClaimedTotal"
-app_local_get
--
+load 0
 -
 app_global_put
 gtxn 0 Sender
@@ -332,24 +300,7 @@ byte "ClaimedTotal"
 gtxn 0 Sender
 byte "ClaimedTotal"
 app_local_get
-gtxn 0 Sender
-byte "Shares"
-app_local_get
-int TMPL_PRECISION__
-*
-int TMPL_INVESTORS_SHARE
-*
-int TMPL_SHARE_SUPPLY
-/
-byte "CentralReceivedTotal"
-app_global_get
-*
-int TMPL_PRECISION_SQUARE
-/
-gtxn 0 Sender
-byte "ClaimedTotal"
-app_local_get
--
+load 0
 +
 app_local_put
 int 1
@@ -947,13 +898,13 @@ assert
 gtxn 2 AssetAmount
 int TMPL_SHARE_PRICE
 /
-store 4
-load 4
+store 5
+load 5
 gtxna 1 ApplicationArgs 1
 btoi
 ==
 assert
-load 4
+load 5
 int 0
 >
 assert
@@ -961,10 +912,10 @@ global CurrentApplicationAddress
 byte "SharesAssetId"
 app_global_get
 asset_holding_get AssetBalance
+store 4
 store 3
-store 2
-load 4
-load 2
+load 5
+load 3
 byte "LockedShares"
 app_global_get
 -
@@ -976,16 +927,16 @@ app_global_get
 gtxn 2 AssetAmount
 +
 app_global_put
-load 4
+load 5
 int TMPL_MAX_RAISABLE_AMOUNT
 <=
 assert
-load 4
+load 5
 byte "GlobalMinInvestAmount"
 app_global_get
 >=
 assert
-load 4
+load 5
 gtxn 0 Sender
 callsub lockshares_0
 gtxn 0 Sender
@@ -1012,8 +963,8 @@ return
 
 // lock_shares
 lockshares_0:
+store 7
 store 6
-store 5
 gtxn 0 Sender
 byte "Shares"
 app_local_get
@@ -1032,16 +983,16 @@ gtxn 0 Sender
 byte "ClaimedTotal"
 app_local_get
 -
-store 7
-load 6
+store 8
+load 7
 byte "Shares"
-load 6
+load 7
 byte "Shares"
 app_local_get
-load 5
+load 6
 +
 app_local_put
-load 6
+load 7
 byte "ClaimedTotal"
 gtxn 0 Sender
 byte "Shares"
@@ -1061,19 +1012,19 @@ gtxn 0 Sender
 byte "ClaimedTotal"
 app_local_get
 -
-load 7
+load 8
 -
 app_local_put
-load 6
+load 7
 byte "ClaimedInit"
-load 6
+load 7
 byte "ClaimedTotal"
 app_local_get
 app_local_put
 byte "LockedShares"
 byte "LockedShares"
 app_global_get
-load 5
+load 6
 +
 app_global_put
 retsub
