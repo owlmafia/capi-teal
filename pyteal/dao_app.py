@@ -33,8 +33,8 @@ def approval_program():
         # app call
         is_app_call_noop_this_app_by_creator(Gtxn[1]),
         Assert(Or(
-            Gtxn[1].application_args.length() == Int(15), 
-            Gtxn[1].application_args.length() == Int(16)
+            is_args_length_res(Gtxn[1], 15),
+            is_args_length_res(Gtxn[1], 16),
         )),
 
         # creator transfers shares (to be sold to investors) to app escrow
@@ -49,7 +49,7 @@ def approval_program():
         Assert(Gtxn[2].xfer_asset() == get_gs(GLOBAL_SHARES_ASSET_ID)),
 
         # create image nft, is image url was passed
-        If(Gtxn[1].application_args.length() == Int(16))
+        If(is_args_length_res(Gtxn[1], 16))
             .Then(setup_image_nft(Gtxn[1].application_args[15]))
             # if no image nft, initialize state with empty values
             # we need this because we verify the global state length in the app
@@ -83,7 +83,7 @@ def approval_program():
 
         is_group_size(1),
 
-        Assert(Gtxn[0].application_args.length() == Int(9)),
+        is_args_length(Gtxn[0], 9),
 
         Approve()
     )
@@ -98,7 +98,7 @@ def approval_program():
 
         # the first tx is the payment to increase min balance, to be able to hold an additional asset
         Assert(Gtxn[1].application_args[0] == Bytes("update_data")),
-        Assert(Gtxn[1].application_args.length() == Int(10)),
+        is_args_length(Gtxn[1], 10),
 
         If(get_gs(GLOBAL_IMAGE_URL) != Gtxn[1].application_args[9])
             .Then(setup_image_nft(Gtxn[1].application_args[9])),
@@ -255,7 +255,7 @@ def approval_program():
     handle_lock = Seq(
         # app call to update state
         is_this_noop_app_call(Gtxn[0]),
-        Assert(Gtxn[0].application_args.length() == Int(4)),
+        is_args_length(Gtxn[0], 4),
 
         # shares xfer to app
         is_shares_transfer(Gtxn[1]),
@@ -355,7 +355,7 @@ def approval_program():
 
         # app call to initialize shares state
         is_this_noop_app_call(Gtxn[1]),
-        Assert(Gtxn[1].application_args.length() == Int(5)),
+        is_args_length(Gtxn[1], 5),
 
         # investor pays for shares: funds xfer to app escrow
         is_funds_transfer(Gtxn[2]),
