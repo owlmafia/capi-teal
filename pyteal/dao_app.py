@@ -6,6 +6,9 @@ from common.payments import *
 from common.inner_txs import *
 from common.state import *
 from domain.setup_dao import *
+from domain.update_dao import *
+from domain.lock import *
+from domain.investor_optin import *
 
 """App central approval"""
 
@@ -69,24 +72,8 @@ def approval_program():
 
     def handle_update_data_tx(tx):
         return Seq(
-            # app call
             is_app_call_noop_this_app_by_creator(tx),
-
-            # update data
-            set_gs(GLOBAL_DAO_NAME, tx.application_args[1]),
-            set_gs(GLOBAL_DAO_DESC, tx.application_args[2]),
-            # for now price is immutable, simplifies funds reclaiming
-            # set_gs(GLOBAL_SHARE_PRICE), Btoi(tx.application_args[3])),
-            set_gs(GLOBAL_SOCIAL_MEDIA_URL, tx.application_args[3]),
-            set_gs(GLOBAL_VERSIONS, tx.application_args[4]),
-
-            # for now shares asset, funds asset and investor's part not updatable - have to think about implications
-
-            set_gs(GLOBAL_PROSPECTUS_URL, tx.application_args[5]),
-            set_gs(GLOBAL_PROSPECTUS_HASH, tx.application_args[6]),
-
-            set_gs(GLOBAL_MIN_INVEST_AMOUNT, Btoi(tx.application_args[7])),
-            set_gs(GLOBAL_MAX_INVEST_AMOUNT, Btoi(tx.application_args[8])),
+            dao_update_set_state(tx.application_args)
         )
 
     handle_update_data_basic = Seq(
@@ -124,18 +111,7 @@ def approval_program():
         is_this_app_call(Gtxn[0]),
         Assert(Gtxn[0].on_completion() == OnComplete.OptIn),
 
-        # initialize local state with default values
-        # why: for general sanity, our app checks always for expected local state length
-        # if investor interrups the investing flow after opting in, local state length will be 0
-        # and the app will throw an error when reading it
-        # we might remove these checks later, in which case this initialization can be removed
-        # we'll keep them for now, at least until ready for a security audit
-        App.localPut(Gtxn[0].sender(), Bytes(LOCAL_SHARES), Int(0)),
-        App.localPut(Gtxn[0].sender(), Bytes(LOCAL_CLAIMED_TOTAL), Int(0)),
-        App.localPut(Gtxn[0].sender(), Bytes(LOCAL_CLAIMED_INIT), Int(0)),
-        App.localPut(Gtxn[0].sender(), Bytes(LOCAL_SIGNED_PROSPECTUS_URL), Bytes("")),
-        App.localPut(Gtxn[0].sender(), Bytes(LOCAL_SIGNED_PROSPECTUS_HASH), Bytes("")),
-        App.localPut(Gtxn[0].sender(), Bytes(LOCAL_SIGNED_PROSPECTUS_TIMESTAMP), Bytes("")),
+        investor_optin_init_state(),
 
         Approve()
     )
@@ -292,9 +268,7 @@ def approval_program():
         lock_shares(Gtxn[1].asset_amount(), Gtxn[0].sender()),
 
         # save acked prospectus
-        App.localPut(Gtxn[0].sender(), Bytes(LOCAL_SIGNED_PROSPECTUS_URL), Gtxn[0].application_args[1]),
-        App.localPut(Gtxn[0].sender(), Bytes(LOCAL_SIGNED_PROSPECTUS_HASH), Gtxn[0].application_args[2]),
-        App.localPut(Gtxn[0].sender(), Bytes(LOCAL_SIGNED_PROSPECTUS_TIMESTAMP), Gtxn[0].application_args[3]),
+        save_prospectus(Gtxn[0].sender(), Gtxn[0].application_args, 1),
 
         Approve()
     )
@@ -441,9 +415,7 @@ def approval_program():
         Assert(App.localGet(Gtxn[0].sender(), Bytes(LOCAL_SHARES)) <= get_gs(GLOBAL_MAX_INVEST_AMOUNT)),
 
         # save acked prospectus
-        App.localPut(Gtxn[0].sender(), Bytes(LOCAL_SIGNED_PROSPECTUS_URL), Gtxn[1].application_args[2]),
-        App.localPut(Gtxn[0].sender(), Bytes(LOCAL_SIGNED_PROSPECTUS_HASH), Gtxn[1].application_args[3]),
-        App.localPut(Gtxn[0].sender(), Bytes(LOCAL_SIGNED_PROSPECTUS_TIMESTAMP), Gtxn[1].application_args[4]),
+        save_prospectus(Gtxn[0].sender(), Gtxn[1].application_args, 2),
 
         Approve()
     )
