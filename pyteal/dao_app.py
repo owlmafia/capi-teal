@@ -1,5 +1,6 @@
 from pyteal import *
 from functions.app_call_checks import *
+from functions.asset_checks import *
 
 """App central approval"""
 
@@ -110,7 +111,8 @@ def approval_program():
         )),
 
         # creator transfers shares (to be sold to investors) to app escrow
-        Assert(Gtxn[2].type_enum() == TxnType.AssetTransfer),
+        is_asset_transfer(Gtxn[2]),
+        # the asset transferred is what will be stored as shares asset id
         Assert(Gtxn[2].xfer_asset() == Btoi(Gtxn[1].application_args[0])),
 
         # initialize state
@@ -423,8 +425,7 @@ def approval_program():
         Assert(Gtxn[0].application_args.length() == Int(4)),
 
         # shares xfer to app
-        Assert(Gtxn[1].type_enum() == TxnType.AssetTransfer),
-        Assert(Gtxn[1].xfer_asset() == App.globalGet(Bytes(GLOBAL_SHARES_ASSET_ID))),
+        is_shares_transfer(Gtxn[1]),
         Assert(Gtxn[1].asset_receiver() == Global.current_application_address()),
         Assert(Gtxn[1].asset_amount() > Int(0)),
 
@@ -526,8 +527,7 @@ def approval_program():
 
         # investor opts-in to shares (needs to be before app call with inner tx sending the asset)
         # optin to shares
-        Assert(Gtxn[0].type_enum() == TxnType.AssetTransfer),
-        Assert(Gtxn[0].xfer_asset() == App.globalGet(Bytes(GLOBAL_SHARES_ASSET_ID))),
+        is_shares_transfer(Gtxn[0]),
         Assert(Gtxn[0].asset_amount() == Int(0)),
         Assert(Gtxn[0].asset_receiver() == Gtxn[0].sender()),
 
@@ -536,9 +536,8 @@ def approval_program():
         Assert(Gtxn[1].application_args.length() == Int(5)),
 
         # investor pays for shares: funds xfer to app escrow
-        Assert(Gtxn[2].type_enum() == TxnType.AssetTransfer),
+        is_funds_transfer(Gtxn[2]),
         Assert(Gtxn[2].asset_amount() > Int(0)),
-        Assert(Gtxn[2].xfer_asset() == App.globalGet(Bytes(GLOBAL_FUNDS_ASSET_ID))),
         Assert(Gtxn[2].asset_receiver() == Global.current_application_address()),
 
         # increment available amount state
@@ -652,8 +651,7 @@ def approval_program():
         is_this_noop_app_call(Gtxn[0]),
 
         # shares being sent back
-        Assert(Gtxn[1].type_enum() == TxnType.AssetTransfer),
-        Assert(Gtxn[1].xfer_asset() == App.globalGet(Bytes(GLOBAL_SHARES_ASSET_ID))),
+        is_shares_transfer(Gtxn[1]),
         Assert(Gtxn[1].asset_receiver() == Global.current_application_address()),
         Assert(Gtxn[1].asset_amount() > Int(0)),
         Assert(Gtxn[1].sender() == Gtxn[0].sender()),
