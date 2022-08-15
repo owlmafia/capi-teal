@@ -129,7 +129,7 @@ def approval_program():
         send_asset(
             Gtxn[0].sender(), 
             get_gs(GLOBAL_SHARES_ASSET_ID), 
-            App.localGet(Gtxn[0].sender(), Bytes(LOCAL_SHARES))
+            get_ls(Gtxn[0].sender(), LOCAL_SHARES)
         ),
 
         # Don't allow to unlock until fund raising period ended.
@@ -144,7 +144,7 @@ def approval_program():
         # TODO where is locked shares local state decremented? not tested?
 
         # decrement locked shares global state
-        decrement_gs(GLOBAL_LOCKED_SHARES, App.localGet(Gtxn[0].sender(), Bytes(LOCAL_SHARES))),
+        decrement_gs(GLOBAL_LOCKED_SHARES, get_ls(Gtxn[0].sender(), LOCAL_SHARES)),
 
         Approve()
     )
@@ -177,13 +177,10 @@ def approval_program():
         decrement_gs(GLOBAL_AVAILABLE_AMOUNT, handle_claim_claimable_dividend.load()),
 
         # update local state with retrieved dividend
-        App.localPut(
-            Gtxn[0].sender(),
-            Bytes(LOCAL_CLAIMED_TOTAL),
-            Add(
-                App.localGet(Gtxn[0].sender(), Bytes(LOCAL_CLAIMED_TOTAL)),
-                handle_claim_claimable_dividend.load()
-            )
+        increment_ls(
+            Gtxn[0].sender(), 
+            LOCAL_CLAIMED_TOTAL,
+            handle_claim_claimable_dividend.load()
         ),
 
         Approve()
@@ -197,27 +194,21 @@ def approval_program():
         return Seq(
             claimable_before_locking.store(calc_claimable_dividend(Gtxn[0].sender())),
 
-            App.localPut(  # set / increment share count in local state
-                sender,
-                Bytes(LOCAL_SHARES),
-                Add(
-                    App.localGet(sender, Bytes(LOCAL_SHARES)),
-                    share_amount
-                )
-            ),
+            # set / increment share count in local state 
+            increment_ls(sender, LOCAL_SHARES, share_amount),
 
             # initialize already claimed local state
-            App.localPut(
+            set_ls(
                 sender,
-                Bytes(LOCAL_CLAIMED_TOTAL),
+                LOCAL_CLAIMED_TOTAL,
                 Minus(calc_claimable_dividend(Gtxn[0].sender()), claimable_before_locking.load())
             ),
             
             # remember initial already claimed local state
-            App.localPut(
+            set_ls(
                 sender,
-                Bytes(LOCAL_CLAIMED_INIT),
-                App.localGet(sender, Bytes(LOCAL_CLAIMED_TOTAL))
+                LOCAL_CLAIMED_INIT,
+                get_ls(sender, LOCAL_CLAIMED_TOTAL)
             ),
 
             # increment locked shares global state
@@ -377,7 +368,7 @@ def approval_program():
 
         # has invested (is investing + possibly has invested before) less or same than max amount (share amount) 
         # NOTE this check has to be AFTER lock_shares, as it expects LOCAL_SHARES to be incremented (by invested amount)
-        Assert(App.localGet(Gtxn[0].sender(), Bytes(LOCAL_SHARES)) <= get_gs(GLOBAL_MAX_INVEST_AMOUNT)),
+        Assert(get_ls(Gtxn[0].sender(), LOCAL_SHARES) <= get_gs(GLOBAL_MAX_INVEST_AMOUNT)),
 
         # save acked prospectus
         save_prospectus(Gtxn[0].sender(), Gtxn[1].application_args, 2),
