@@ -3,6 +3,7 @@ from functions.app_call_checks import *
 from functions.asset_checks import *
 from functions.constants import *
 from functions.payments import *
+from functions.inner_txs import *
 
 """App central approval"""
 
@@ -19,26 +20,6 @@ def approval_program():
         Approve()
     )
 
-    def setup_image_nft(url_bytes):
-        return Seq(
-            App.globalPut(Bytes(GLOBAL_IMAGE_URL), url_bytes),
-            InnerTxnBuilder.Begin(),
-            InnerTxnBuilder.SetFields({
-                TxnField.type_enum: TxnType.AssetConfig,
-                TxnField.asset_amount: Int(0),
-                TxnField.config_asset_decimals: Int(0),
-                TxnField.config_asset_total: Int(1),
-                TxnField.config_asset_manager: Gtxn[0].sender(),
-                TxnField.config_asset_default_frozen: Int(0),
-                TxnField.config_asset_unit_name: Bytes("IMG"),
-                TxnField.config_asset_name: Bytes("IMG"),
-                TxnField.config_asset_url: url_bytes,
-                TxnField.fee: Int(0)
-            }),
-            InnerTxnBuilder.Submit(),
-            App.globalPut(Bytes(GLOBAL_IMAGE_ASSET_ID), InnerTxn.created_asset_id())
-        )
-        
     handle_setup_dao = Seq(
         # creator sends min balance to app address
         is_payment_to_this_app(Gtxn[0]),
@@ -113,25 +94,10 @@ def approval_program():
 
         # creator's account setup
 
-        InnerTxnBuilder.Begin(),
-        # optin to funds asset
-        InnerTxnBuilder.SetFields({
-            TxnField.type_enum: TxnType.AssetTransfer,
-            TxnField.asset_receiver: Global.current_application_address(),
-            TxnField.asset_amount: Int(0),
-            TxnField.xfer_asset: App.globalGet(Bytes(GLOBAL_FUNDS_ASSET_ID)),
-            TxnField.fee: Int(0)
-        }),
-        InnerTxnBuilder.Next(),
-        # optin to shares asset
-        InnerTxnBuilder.SetFields({
-            TxnField.type_enum: TxnType.AssetTransfer,
-            TxnField.asset_receiver: Global.current_application_address(),
-            TxnField.asset_amount: Int(0),
-            TxnField.xfer_asset: App.globalGet(Bytes(GLOBAL_SHARES_ASSET_ID)),
-            TxnField.fee: Int(0)
-        }),
-        InnerTxnBuilder.Submit(),
+        setup_dao_optins(
+            App.globalGet(Bytes(GLOBAL_FUNDS_ASSET_ID)),
+            App.globalGet(Bytes(GLOBAL_SHARES_ASSET_ID))
+        ),
 
         Approve()
     )
@@ -217,15 +183,11 @@ def approval_program():
         Assert(Gtxn[0].on_completion() == OnComplete.CloseOut),
 
         # shares xfer to the investor
-        InnerTxnBuilder.Begin(),
-        InnerTxnBuilder.SetFields({
-            TxnField.type_enum: TxnType.AssetTransfer,
-            TxnField.asset_receiver: Gtxn[0].sender(),
-            TxnField.asset_amount: App.localGet(Gtxn[0].sender(), Bytes(LOCAL_SHARES)),
-            TxnField.xfer_asset: App.globalGet(Bytes(GLOBAL_SHARES_ASSET_ID)),
-            TxnField.fee: Int(0)
-        }),
-        InnerTxnBuilder.Submit(),
+        send_asset(
+            Gtxn[0].sender(), 
+            App.globalGet(Bytes(GLOBAL_SHARES_ASSET_ID)), 
+            App.localGet(Gtxn[0].sender(), Bytes(LOCAL_SHARES))
+        ),
 
         # Don't allow to unlock until fund raising period ended.
         # We need this to be able to set a max limit to shares that can be bought
@@ -285,15 +247,11 @@ def approval_program():
         Assert(claimable_dividend <= App.globalGet(Bytes(GLOBAL_AVAILABLE_AMOUNT))),
 
         # send dividend to caller
-        InnerTxnBuilder.Begin(),
-        InnerTxnBuilder.SetFields({
-            TxnField.type_enum: TxnType.AssetTransfer,
-            # todo scratch? compare teal length with repeating claimable_dividend
-            TxnField.asset_amount: claimable_dividend,
-            TxnField.asset_receiver: Gtxn[0].sender(),
-            TxnField.xfer_asset: App.globalGet(Bytes(GLOBAL_FUNDS_ASSET_ID)),
-        }),
-        InnerTxnBuilder.Submit(),
+        send_asset_no_set_fee(
+            Gtxn[0].sender(), 
+            App.globalGet(Bytes(GLOBAL_FUNDS_ASSET_ID)), 
+            claimable_dividend
+        ),
 
         # decrease available amount
         # no underflow possible, since we checked that claimable_dividend <= GLOBAL_AVAILABLE_AMOUNT
@@ -429,14 +387,11 @@ def approval_program():
         # pay capi fee
         # note BEFORE updating GLOBAL_AVAILABLE_AMOUNT as it needs this state 
         # to calculate not yet drained amount  
-        InnerTxnBuilder.Begin(),
-        InnerTxnBuilder.SetFields({
-            TxnField.type_enum: TxnType.AssetTransfer,
-            TxnField.asset_amount: calculate_capi_fee(handle_drain_not_yet_drained_amount),
-            TxnField.asset_receiver: tmpl_capi_escrow_address,
-            TxnField.xfer_asset: App.globalGet(Bytes(GLOBAL_FUNDS_ASSET_ID)),
-        }),
-        InnerTxnBuilder.Submit(),
+        send_asset_no_set_fee(
+            tmpl_capi_escrow_address,
+            App.globalGet(Bytes(GLOBAL_FUNDS_ASSET_ID)), 
+            calculate_capi_fee(handle_drain_not_yet_drained_amount)
+        ),
 
         # increment available amount
         # WA = WA + NYD (not yet drained) - fee on NYD
@@ -569,14 +524,11 @@ def approval_program():
         ),
 
         # send the funds to the withdrawer
-        InnerTxnBuilder.Begin(),
-        InnerTxnBuilder.SetFields({
-            TxnField.type_enum: TxnType.AssetTransfer,
-            TxnField.asset_amount: Btoi(Gtxn[0].application_args[1]),
-            TxnField.asset_receiver: Txn.sender(),
-            TxnField.xfer_asset: App.globalGet(Bytes(GLOBAL_FUNDS_ASSET_ID)),
-        }),
-        InnerTxnBuilder.Submit(),
+        send_asset_no_set_fee(
+            Gtxn[0].sender(),
+            App.globalGet(Bytes(GLOBAL_FUNDS_ASSET_ID)),
+            Btoi(Gtxn[0].application_args[1])
+        ),
 
         Approve()
     )
@@ -607,15 +559,12 @@ def approval_program():
         ),
 
         # send paid funds back
-        InnerTxnBuilder.Begin(),
-        InnerTxnBuilder.SetFields({
-            TxnField.type_enum: TxnType.AssetTransfer,
+        send_asset_no_set_fee(
+            Gtxn[0].sender(),
+            App.globalGet(Bytes(GLOBAL_FUNDS_ASSET_ID)),
             # TODO scratch?
-            TxnField.asset_amount: Gtxn[1].asset_amount() * App.globalGet(Bytes(GLOBAL_SHARE_PRICE)),
-            TxnField.asset_receiver: Gtxn[0].sender(),
-            TxnField.xfer_asset: App.globalGet(Bytes(GLOBAL_FUNDS_ASSET_ID)),
-        }),
-        InnerTxnBuilder.Submit(),
+            Gtxn[1].asset_amount() * App.globalGet(Bytes(GLOBAL_SHARE_PRICE)),
+        ),
 
         # decrease available amount
         App.globalPut(
