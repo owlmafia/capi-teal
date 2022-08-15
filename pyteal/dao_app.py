@@ -2,6 +2,7 @@ from pyteal import *
 from functions.app_call_checks import *
 from functions.asset_checks import *
 from functions.constants import *
+from functions.payments import *
 
 """App central approval"""
 
@@ -40,8 +41,7 @@ def approval_program():
         
     handle_setup_dao = Seq(
         # creator sends min balance to app address
-        Assert(Gtxn[0].type_enum() == TxnType.Payment),
-        Assert(Gtxn[0].receiver() == Global.current_application_address()),
+        is_payment_to_this_app(Gtxn[0]),
 
         # app call
         is_app_call_noop_this_app_by_creator(Gtxn[1]),
@@ -175,8 +175,7 @@ def approval_program():
         # group size checked in cond
 
         # increase min balance to hold new nft
-        Assert(Gtxn[0].type_enum() == TxnType.Payment),
-        Assert(Gtxn[0].receiver() == Global.current_application_address()),
+        is_payment_to_this_app(Gtxn[0]),
 
         # the first tx is the payment to increase min balance, to be able to hold an additional asset
         Assert(Gtxn[1].application_args[0] == Bytes("update_data")),

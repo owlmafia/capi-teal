@@ -917,14 +917,14 @@ gtxn 2 TypeEnum
 int axfer
 ==
 assert
-gtxn 2 AssetAmount
-int 0
->
-assert
 gtxn 2 XferAsset
 byte "FundsAssetId"
 app_global_get
 ==
+assert
+gtxn 2 AssetAmount
+int 0
+>
 assert
 gtxn 2 AssetReceiver
 global CurrentApplicationAddress
