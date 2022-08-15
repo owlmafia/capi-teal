@@ -1,5 +1,5 @@
 from pyteal import *
-from common import *
+from functions.app_call_checks import *
 
 """App central approval"""
 
