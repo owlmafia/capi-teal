@@ -255,23 +255,7 @@ int NoOp
 ==
 assert
 gtxn 0 Sender
-byte "Shares"
-app_local_get
-int TMPL_PRECISION__
-*
-int TMPL_INVESTORS_SHARE
-*
-int TMPL_SHARE_SUPPLY
-/
-byte "CentralReceivedTotal"
-app_global_get
-*
-int TMPL_PRECISION_SQUARE
-/
-gtxn 0 Sender
-byte "ClaimedTotal"
-app_local_get
--
+callsub calcclaimabledividend_1
 store 0
 load 0
 byte "AvailableAmount"
@@ -519,7 +503,7 @@ gtxn 1 Sender
 assert
 gtxn 1 AssetAmount
 gtxn 0 Sender
-callsub lockshares_0
+callsub lockshares_2
 gtxn 0 Sender
 byte "SignedProspectusUrl"
 gtxna 0 ApplicationArgs 1
@@ -938,7 +922,7 @@ app_global_get
 assert
 load 5
 gtxn 0 Sender
-callsub lockshares_0
+callsub lockshares_2
 gtxn 0 Sender
 byte "Shares"
 app_local_get
@@ -961,11 +945,10 @@ app_local_put
 int 1
 return
 
-// lock_shares
-lockshares_0:
+// calc_total_entitled_dividend
+calctotalentitleddividend_0:
 store 7
-store 6
-gtxn 0 Sender
+load 7
 byte "Shares"
 app_local_get
 int TMPL_PRECISION__
@@ -979,52 +962,51 @@ app_global_get
 *
 int TMPL_PRECISION_SQUARE
 /
-gtxn 0 Sender
+retsub
+
+// calc_claimable_dividend
+calcclaimabledividend_1:
+store 6
+load 6
+callsub calctotalentitleddividend_0
+load 6
 byte "ClaimedTotal"
 app_local_get
 -
+retsub
+
+// lock_shares
+lockshares_2:
+store 9
 store 8
-load 7
+gtxn 0 Sender
+callsub calcclaimabledividend_1
+store 10
+load 9
 byte "Shares"
-load 7
+load 9
 byte "Shares"
 app_local_get
-load 6
+load 8
 +
 app_local_put
-load 7
+load 9
 byte "ClaimedTotal"
 gtxn 0 Sender
-byte "Shares"
-app_local_get
-int TMPL_PRECISION__
-*
-int TMPL_INVESTORS_SHARE
-*
-int TMPL_SHARE_SUPPLY
-/
-byte "CentralReceivedTotal"
-app_global_get
-*
-int TMPL_PRECISION_SQUARE
-/
-gtxn 0 Sender
-byte "ClaimedTotal"
-app_local_get
--
-load 8
+callsub calcclaimabledividend_1
+load 10
 -
 app_local_put
-load 7
+load 9
 byte "ClaimedInit"
-load 7
+load 9
 byte "ClaimedTotal"
 app_local_get
 app_local_put
 byte "LockedShares"
 byte "LockedShares"
 app_global_get
-load 6
+load 8
 +
 app_global_put
 retsub

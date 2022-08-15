@@ -4,6 +4,7 @@ from common.state import *
 
 # extracted part of claimable_dividend, for readability
 # how much the investor is entitled to, based on the total received and the investor's locked shares (does not consider already claimed dividend)
+@Subroutine(TealType.uint64)
 def calc_total_entitled_dividend(investor): return Div(
     Mul(
         Div(
@@ -20,6 +21,7 @@ def calc_total_entitled_dividend(investor): return Div(
 
 # Calculates claimable dividend based on LOCAL_SHARES and LOCAL_CLAIMED_TOTAL.
 # Expects claimer to be the gtxn 0 sender.
+@Subroutine(TealType.uint64)
 def calc_claimable_dividend(investor): return Minus(
     calc_total_entitled_dividend(investor), 
     App.localGet(investor, Bytes(LOCAL_CLAIMED_TOTAL))
