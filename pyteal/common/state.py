@@ -9,3 +9,17 @@ def set_gs(key, value): return Seq(
 def get_gs(key): return Seq(
     App.globalGet(Bytes(key))
 )
+
+def decrement_gs(key, value): return Seq(
+    set_gs(key, Minus(
+        get_gs(key),
+        value
+    ))
+)
+
+def increment_gs(key, value): return Seq(
+    set_gs(key, Minus(
+        get_gs(key),
+        value
+    ))
+)

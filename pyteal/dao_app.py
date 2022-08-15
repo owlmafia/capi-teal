@@ -144,10 +144,7 @@ def approval_program():
         # TODO where is locked shares local state decremented? not tested?
 
         # decrement locked shares global state
-        set_gs(GLOBAL_LOCKED_SHARES, Minus(
-            get_gs(GLOBAL_LOCKED_SHARES),
-            App.localGet(Gtxn[0].sender(), Bytes(LOCAL_SHARES))
-        )),
+        decrement_gs(GLOBAL_LOCKED_SHARES, App.localGet(Gtxn[0].sender(), Bytes(LOCAL_SHARES))),
 
         Approve()
     )
@@ -177,10 +174,7 @@ def approval_program():
         # no underflow possible, since we checked that claimable_dividend <= GLOBAL_AVAILABLE_AMOUNT
         # NOTE: BEFORE updating LOCAL_CLAIMED_TOTAL, since we read it to calculate the current divident being claimed
         # (TODO above solved by using scratch?)
-        set_gs(GLOBAL_AVAILABLE_AMOUNT, Minus(
-                get_gs(GLOBAL_AVAILABLE_AMOUNT),
-                handle_claim_claimable_dividend.load()
-        )),
+        decrement_gs(GLOBAL_AVAILABLE_AMOUNT, handle_claim_claimable_dividend.load()),
 
         # update local state with retrieved dividend
         App.localPut(
@@ -227,10 +221,7 @@ def approval_program():
             ),
 
             # increment locked shares global state
-            set_gs(GLOBAL_LOCKED_SHARES, Add(
-                get_gs(GLOBAL_LOCKED_SHARES), 
-                share_amount
-            )),
+            increment_gs(GLOBAL_LOCKED_SHARES, share_amount)
         )
 
     handle_lock = Seq(
@@ -290,10 +281,10 @@ def approval_program():
         app_escrow_funds_balance,
 
         # increment total received
-        set_gs(GLOBAL_RECEIVED_TOTAL, Add(
-            get_gs(GLOBAL_RECEIVED_TOTAL),
+        increment_gs(
+            GLOBAL_RECEIVED_TOTAL,
             Minus(handle_drain_not_yet_drained_amount, calculate_capi_fee(handle_drain_not_yet_drained_amount))
-        )),
+        ),
 
         # pay capi fee
         # note BEFORE updating GLOBAL_AVAILABLE_AMOUNT as it needs this state 
@@ -309,10 +300,10 @@ def approval_program():
         # in words: by draining we make the "new income" (in prev. implementation, customer escrow balance) minus capi fee available to be withdrawn
         # note AFTER the inner tx, 
         # which accesses GLOBAL_AVAILABLE_AMOUNT to calculate the not yet drained amount / the capi fee
-        set_gs(GLOBAL_AVAILABLE_AMOUNT, Add(
-            get_gs(GLOBAL_AVAILABLE_AMOUNT),
+        increment_gs(
+            GLOBAL_AVAILABLE_AMOUNT, 
             Minus(handle_drain_not_yet_drained_amount, calculate_capi_fee(handle_drain_not_yet_drained_amount))
-        )),
+        ),
 
         Approve()
     )
@@ -343,10 +334,7 @@ def approval_program():
 
         # increment available amount state
         # investments don't pay capi fee or generate dividend, so are immediately available (don't have to be drained)
-        set_gs(GLOBAL_AVAILABLE_AMOUNT, Add(
-            get_gs(GLOBAL_AVAILABLE_AMOUNT),
-            Gtxn[2].asset_amount()
-        )),
+        increment_gs(GLOBAL_AVAILABLE_AMOUNT, Gtxn[2].asset_amount()),
 
         # the investor sends all txs
         Assert(Gtxn[0].sender() == Gtxn[1].sender()),
@@ -373,10 +361,7 @@ def approval_program():
         )),
 
         # update total raised amount
-        set_gs(GLOBAL_RAISED, Add(
-            get_gs(GLOBAL_RAISED),
-            Gtxn[2].asset_amount()
-        )),
+        increment_gs(GLOBAL_RAISED, Gtxn[2].asset_amount()),
 
         # total raised is below or equal to max allowed amount (regulatory)
         Assert(handle_invest_calculated_share_amount.load() <= tmpl_max_raisable_amount),
@@ -513,7 +498,7 @@ def export(path, output):
         print("Wrote TEAL to: " + path)
 
 
-export("teal_template/dao_app_approval.teal", approval_program())
-export("teal_template/dao_app_clear.teal", clear_program())
+export("teal_template/dao_app_approval_tmp.teal", approval_program())
+export("teal_template/dao_app_clear_tmp.teal", clear_program())
 
 print("Done! Wrote dao approval and clear TEAL")
