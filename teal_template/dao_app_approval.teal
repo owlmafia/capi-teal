@@ -873,13 +873,13 @@ byte "FundsAssetId"
 app_global_get
 ==
 assert
-gtxn 2 AssetAmount
-int 0
->
-assert
 gtxn 2 AssetReceiver
 global CurrentApplicationAddress
 ==
+assert
+gtxn 2 AssetAmount
+int 0
+>
 assert
 byte "AvailableAmount"
 byte "AvailableAmount"

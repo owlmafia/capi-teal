@@ -239,8 +239,7 @@ def approval_program():
         is_args_length(Gtxn[0], 4),
 
         # shares xfer to app
-        is_shares_transfer(Gtxn[1]),
-        Assert(Gtxn[1].asset_receiver() == Global.current_application_address()),
+        is_shares_transfer_to_this_app(Gtxn[1]),
         Assert(Gtxn[1].asset_amount() > Int(0)),
 
         # app caller is locking the shares
@@ -339,9 +338,8 @@ def approval_program():
         is_args_length(Gtxn[1], 5),
 
         # investor pays for shares: funds xfer to app escrow
-        is_funds_transfer(Gtxn[2]),
+        is_funds_transfer_to_this_app(Gtxn[2]),
         Assert(Gtxn[2].asset_amount() > Int(0)),
-        Assert(Gtxn[2].asset_receiver() == Global.current_application_address()),
 
         # increment available amount state
         # investments don't pay capi fee or generate dividend, so are immediately available (don't have to be drained)
@@ -443,8 +441,7 @@ def approval_program():
         is_this_noop_app_call(Gtxn[0]),
 
         # shares being sent back
-        is_shares_transfer(Gtxn[1]),
-        Assert(Gtxn[1].asset_receiver() == Global.current_application_address()),
+        is_shares_transfer_to_this_app(Gtxn[1]),
         Assert(Gtxn[1].asset_amount() > Int(0)),
         Assert(Gtxn[1].sender() == Gtxn[0].sender()),
 
