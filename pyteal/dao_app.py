@@ -10,6 +10,7 @@ from domain.update_dao import *
 from domain.lock import *
 from domain.investor_optin import *
 from common.general import *
+from domain.claim import *
 
 """App central approval"""
 
@@ -151,29 +152,6 @@ def approval_program():
         Approve()
     )
 
-    # extracted part of claimable_dividend, for readability
-    # how much the investor is entitled to, based on the total received and the investor's locked shares (does not consider already claimed dividend)
-    total_entitled_dividend = Div(
-        Mul(
-            Div(
-                Mul(
-                    Mul(App.localGet(Gtxn[0].sender(), Bytes(LOCAL_SHARES)), tmpl_precision),
-                    tmpl_investors_share
-                ),
-                tmpl_share_supply
-            ),
-            get_gs(GLOBAL_RECEIVED_TOTAL)
-        ),
-        tmpl_precision_square
-    )
-
-    # Calculates claimable dividend based on LOCAL_SHARES and LOCAL_CLAIMED_TOTAL.
-    # Expects claimer to be the gtxn 0 sender.
-    claimable_dividend = Minus(
-        total_entitled_dividend, 
-        App.localGet(Gtxn[0].sender(), Bytes(LOCAL_CLAIMED_TOTAL))
-    )
-
     handle_claim = Seq(
         is_group_size(1),
 
@@ -183,13 +161,13 @@ def approval_program():
         #TODO tests: can't withdraw and claim more than available amount
 
         # has to be <= available amount
-        Assert(claimable_dividend <= get_gs(GLOBAL_AVAILABLE_AMOUNT)),
+        Assert(calc_claimable_dividend(Gtxn[0].sender()) <= get_gs(GLOBAL_AVAILABLE_AMOUNT)),
 
         # send dividend to caller
         send_asset_no_set_fee(
             Gtxn[0].sender(), 
             get_gs(GLOBAL_FUNDS_ASSET_ID), 
-            claimable_dividend
+            calc_claimable_dividend(Gtxn[0].sender())
         ),
 
         # decrease available amount
@@ -198,7 +176,7 @@ def approval_program():
         # (TODO above solved by using scratch?)
         set_gs(GLOBAL_AVAILABLE_AMOUNT, Minus(
                 get_gs(GLOBAL_AVAILABLE_AMOUNT),
-                claimable_dividend
+                calc_claimable_dividend(Gtxn[0].sender())
         )),
 
         # update local state with retrieved dividend
@@ -207,7 +185,7 @@ def approval_program():
             Bytes(LOCAL_CLAIMED_TOTAL),
             Add(
                 App.localGet(Gtxn[0].sender(), Bytes(LOCAL_CLAIMED_TOTAL)),
-                claimable_dividend
+                calc_claimable_dividend(Gtxn[0].sender())
             )
         ),
 
@@ -220,7 +198,7 @@ def approval_program():
         claimable_before_locking = ScratchVar(TealType.uint64)
 
         return Seq(
-            claimable_before_locking.store(claimable_dividend),
+            claimable_before_locking.store(calc_claimable_dividend(Gtxn[0].sender())),
 
             App.localPut(  # set / increment share count in local state
                 sender,
@@ -235,7 +213,7 @@ def approval_program():
             App.localPut(
                 sender,
                 Bytes(LOCAL_CLAIMED_TOTAL),
-                Minus(claimable_dividend, claimable_before_locking.load())
+                Minus(calc_claimable_dividend(Gtxn[0].sender()), claimable_before_locking.load())
             ),
             
             # remember initial already claimed local state
