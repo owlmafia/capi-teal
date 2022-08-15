@@ -1,5 +1,5 @@
 from pyteal import *
-from functions.constants import *
+from common.constants import *
 
 def is_asset_transfer(tx): return Seq(
     Assert(tx.type_enum() == TxnType.AssetTransfer),

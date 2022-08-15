@@ -1,10 +1,10 @@
 from pyteal import *
-from functions.app_call_checks import *
-from functions.asset_checks import *
-from functions.constants import *
-from functions.payments import *
-from functions.inner_txs import *
-from functions.state import *
+from common.app_call_checks import *
+from common.asset_checks import *
+from common.constants import *
+from common.payments import *
+from common.inner_txs import *
+from common.state import *
 
 """App central approval"""
 

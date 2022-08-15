@@ -1,5 +1,5 @@
 from pyteal import *
-from functions.constants import *
+from common.constants import *
 
 def setup_dao_optins(funds_asset_id, shares_asset_id): return Seq(
     InnerTxnBuilder.Begin(),
