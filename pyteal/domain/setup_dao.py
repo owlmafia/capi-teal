@@ -1,6 +1,8 @@
 from pyteal import *
 from common.state import *
 from common.constants import *
+from common.general import *
+from common.inner_txs import *
 
 def dao_setup_init_global_state(args): return Seq(
     # initialize state
@@ -40,4 +42,17 @@ def dao_setup_init_global_state(args): return Seq(
 
     set_gs(GLOBAL_MIN_INVEST_AMOUNT, Btoi(args[13])),
     set_gs(GLOBAL_MAX_INVEST_AMOUNT, Btoi(args[14])),
+
+    # create image nft, is image url was passed
+    If(is_args_length_res(Gtxn[1], 16))
+        .Then(setup_image_nft(Gtxn[1].application_args[15]))
+        # if no image nft, initialize state with empty values
+        # we need this because we verify the global state length in the app
+        # and it's more reliable to have a fixed length than a range
+        .Else(
+            Seq(
+                set_gs(GLOBAL_IMAGE_URL, Bytes("")),
+                set_gs(GLOBAL_IMAGE_ASSET_ID, Int(0))
+            )
+        ),
 )

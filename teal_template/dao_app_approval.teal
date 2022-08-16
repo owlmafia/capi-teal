@@ -741,11 +741,6 @@ byte "GlobalMaxInvestAmount"
 gtxna 1 ApplicationArgs 14
 btoi
 app_global_put
-gtxn 2 XferAsset
-byte "SharesAssetId"
-app_global_get
-==
-assert
 gtxn 1 NumAppArgs
 int 16
 ==
@@ -757,6 +752,11 @@ byte "ImageAsset"
 int 0
 app_global_put
 main_l31:
+gtxn 2 XferAsset
+byte "SharesAssetId"
+app_global_get
+==
+assert
 itxn_begin
 int axfer
 itxn_field TypeEnum
