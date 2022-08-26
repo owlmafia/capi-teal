@@ -25,6 +25,7 @@ GLOBAL_SHARE_PRICE = "SharePrice"
 GLOBAL_INVESTORS_PART = "InvestorsPart"
 
 GLOBAL_SOCIAL_MEDIA_URL = "SocialMediaUrl"
+GLOBAL_HOMEPAGE = "HomepageUrl"
 
 GLOBAL_TARGET = "Target"
 # Date where the dao was setup

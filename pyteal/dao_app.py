@@ -34,8 +34,8 @@ def approval_program():
         # app call
         is_app_call_noop_this_app_by_creator(Gtxn[1]),
         Assert(Or(
-            is_args_length_res(Gtxn[1], 15),
             is_args_length_res(Gtxn[1], 16),
+            is_args_length_res(Gtxn[1], 17),
         )),
 
         # creator transfers shares (to be sold to investors) to app escrow
