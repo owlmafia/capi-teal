@@ -43,11 +43,9 @@ def dao_setup_init_global_state(args): return Seq(
     set_gs(GLOBAL_MIN_INVEST_AMOUNT, Btoi(args[13])),
     set_gs(GLOBAL_MAX_INVEST_AMOUNT, Btoi(args[14])),
 
-    set_gs(GLOBAL_HOMEPAGE, args[15]),
-
     # create image nft, is image url was passed
-    If(is_args_length_res(Gtxn[1], 17))
-        .Then(setup_image_nft(Gtxn[1].application_args[16]))
+    If(is_args_length_res(Gtxn[1], 16))
+        .Then(setup_image_nft(Gtxn[1].application_args[15]))
         # if no image nft, initialize state with empty values
         # we need this because we verify the global state length in the app
         # and it's more reliable to have a fixed length than a range

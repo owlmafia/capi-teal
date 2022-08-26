@@ -659,10 +659,10 @@ int NoOp
 ==
 assert
 gtxn 1 NumAppArgs
-int 16
+int 15
 ==
 gtxn 1 NumAppArgs
-int 17
+int 16
 ==
 ||
 assert
@@ -741,11 +741,8 @@ byte "GlobalMaxInvestAmount"
 gtxna 1 ApplicationArgs 14
 btoi
 app_global_put
-byte "HomepageUrl"
-gtxna 1 ApplicationArgs 15
-app_global_put
 gtxn 1 NumAppArgs
-int 17
+int 16
 ==
 bnz main_l32
 byte "ImageUrl"
@@ -789,7 +786,7 @@ int 1
 return
 main_l32:
 byte "ImageUrl"
-gtxna 1 ApplicationArgs 16
+gtxna 1 ApplicationArgs 15
 app_global_put
 itxn_begin
 int acfg
@@ -808,7 +805,7 @@ byte "IMG"
 itxn_field ConfigAssetUnitName
 byte "IMG"
 itxn_field ConfigAssetName
-gtxna 1 ApplicationArgs 16
+gtxna 1 ApplicationArgs 15
 itxn_field ConfigAssetURL
 int 0
 itxn_field Fee
