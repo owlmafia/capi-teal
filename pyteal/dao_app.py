@@ -395,6 +395,17 @@ def approval_program():
         Approve()
     )
 
+    # development / testing settings
+    handle_dev_settings = Seq(
+        is_group_size(1),
+        is_args_length(Gtxn[0], 2),
+
+        # allow to set raising end date on the fly, to test reaching this date without having to wait
+        set_gs(GLOBAL_TARGET_END_DATE, Btoi(Gtxn[0].application_args[1])),
+
+        Approve()
+    )
+
     # allow the investors to get their investments back if the funding target wasn't met
     #
     # note that for reclaim, we expect the user to have unlocked the shares
@@ -460,7 +471,10 @@ def approval_program():
         [Gtxn[0].application_args[0] == Bytes("drain"), handle_drain],
         [Gtxn[0].application_args[0] == Bytes("update_data"), handle_update_data_basic],
         [Gtxn[0].application_args[0] == Bytes("withdraw"), handle_withdrawal],
+        [Gtxn[0].application_args[0] == Bytes("dev_settings"), handle_dev_settings],
     )
+
+    # program = Approve()
 
     return compileTeal(program, Mode.Application, version=6)
 
