@@ -43,6 +43,9 @@ def dao_setup_init_global_state(args): return Seq(
     set_gs(GLOBAL_MIN_INVEST_AMOUNT, Btoi(args[13])),
     set_gs(GLOBAL_MAX_INVEST_AMOUNT, Btoi(args[14])),
 
+    # team is set in team view, not during dao setup
+    set_gs(GLOBAL_TEAM_URL, Bytes("")),
+
     # create image nft, is image url was passed
     If(is_args_length_res(Gtxn[1], 16))
         .Then(setup_image_nft(Gtxn[1].application_args[15]))

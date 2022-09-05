@@ -26,6 +26,8 @@ GLOBAL_INVESTORS_PART = "InvestorsPart"
 
 GLOBAL_SOCIAL_MEDIA_URL = "SocialMediaUrl"
 
+GLOBAL_TEAM_URL = "TeamUrl"
+
 GLOBAL_TARGET = "Target"
 # Date where the dao was setup
 # it's likely possible to get this via indexer, instead of storing it in teal

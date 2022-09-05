@@ -6,15 +6,15 @@ global GroupSize
 int 3
 ==
 &&
-bnz main_l35
+bnz main_l37
 global GroupSize
 int 3
 ==
-bnz main_l31
+bnz main_l33
 gtxn 0 OnCompletion
 int 4
 ==
-bnz main_l30
+bnz main_l32
 gtxn 0 TypeEnum
 int appl
 ==
@@ -22,41 +22,63 @@ gtxn 0 ApplicationID
 int 0
 ==
 &&
-bnz main_l29
+bnz main_l31
 global GroupSize
 int 2
 ==
-bnz main_l20
+bnz main_l22
 gtxna 0 ApplicationArgs 0
 byte "optin"
 ==
-bnz main_l19
+bnz main_l21
 gtxna 0 ApplicationArgs 0
 byte "unlock"
 ==
-bnz main_l18
+bnz main_l20
 gtxna 0 ApplicationArgs 0
 byte "claim"
 ==
-bnz main_l17
+bnz main_l19
 gtxna 0 ApplicationArgs 0
 byte "drain"
 ==
-bnz main_l16
+bnz main_l18
 gtxna 0 ApplicationArgs 0
 byte "update_data"
 ==
-bnz main_l15
+bnz main_l17
 gtxna 0 ApplicationArgs 0
 byte "withdraw"
 ==
-bnz main_l14
+bnz main_l16
 gtxna 0 ApplicationArgs 0
 byte "dev_settings"
 ==
-bnz main_l13
+bnz main_l15
+gtxna 0 ApplicationArgs 0
+byte "team"
+==
+bnz main_l14
 err
-main_l13:
+main_l14:
+global GroupSize
+int 1
+==
+assert
+gtxn 0 NumAppArgs
+int 2
+==
+assert
+gtxn 0 Sender
+global CreatorAddress
+==
+assert
+byte "TeamUrl"
+gtxna 0 ApplicationArgs 1
+app_global_put
+int 1
+return
+main_l15:
 global GroupSize
 int 1
 ==
@@ -71,7 +93,7 @@ btoi
 app_global_put
 int 1
 return
-main_l14:
+main_l16:
 global GroupSize
 int 1
 ==
@@ -118,7 +140,7 @@ itxn_field XferAsset
 itxn_submit
 int 1
 return
-main_l15:
+main_l17:
 gtxn 0 TypeEnum
 int appl
 ==
@@ -171,7 +193,7 @@ int 9
 assert
 int 1
 return
-main_l16:
+main_l18:
 global GroupSize
 int 1
 ==
@@ -256,7 +278,7 @@ int TMPL_PRECISION_SQUARE
 app_global_put
 int 1
 return
-main_l17:
+main_l19:
 global GroupSize
 int 1
 ==
@@ -308,7 +330,7 @@ load 0
 app_local_put
 int 1
 return
-main_l18:
+main_l20:
 global GroupSize
 int 1
 ==
@@ -355,7 +377,7 @@ app_local_get
 app_global_put
 int 1
 return
-main_l19:
+main_l21:
 global GroupSize
 int 1
 ==
@@ -398,21 +420,21 @@ byte ""
 app_local_put
 int 1
 return
-main_l20:
+main_l22:
 gtxn 0 TypeEnum
 int pay
 ==
-bnz main_l26
+bnz main_l28
 gtxna 0 ApplicationArgs 0
 byte "lock"
 ==
-bnz main_l25
+bnz main_l27
 gtxna 0 ApplicationArgs 0
 byte "reclaim"
 ==
-bnz main_l24
+bnz main_l26
 err
-main_l24:
+main_l26:
 gtxn 0 TypeEnum
 int appl
 ==
@@ -482,7 +504,7 @@ app_global_get
 app_global_put
 int 1
 return
-main_l25:
+main_l27:
 gtxn 0 TypeEnum
 int appl
 ==
@@ -537,7 +559,7 @@ gtxna 0 ApplicationArgs 3
 app_local_put
 int 1
 return
-main_l26:
+main_l28:
 gtxn 1 TypeEnum
 int appl
 ==
@@ -600,11 +622,11 @@ byte "ImageUrl"
 app_global_get
 gtxna 1 ApplicationArgs 9
 !=
-bnz main_l28
-main_l27:
+bnz main_l30
+main_l29:
 int 1
 return
-main_l28:
+main_l30:
 byte "ImageUrl"
 gtxna 1 ApplicationArgs 9
 app_global_put
@@ -633,11 +655,11 @@ itxn_submit
 byte "ImageAsset"
 itxn CreatedAssetID
 app_global_put
-b main_l27
-main_l29:
+b main_l29
+main_l31:
 int 1
 return
-main_l30:
+main_l32:
 global GroupSize
 int 1
 ==
@@ -652,7 +674,7 @@ global CreatorAddress
 assert
 int 1
 return
-main_l31:
+main_l33:
 gtxn 0 TypeEnum
 int pay
 ==
@@ -760,17 +782,20 @@ byte "GlobalMaxInvestAmount"
 gtxna 1 ApplicationArgs 14
 btoi
 app_global_put
+byte "TeamUrl"
+byte ""
+app_global_put
 gtxn 1 NumAppArgs
 int 16
 ==
-bnz main_l34
+bnz main_l36
 byte "ImageUrl"
 byte ""
 app_global_put
 byte "ImageAsset"
 int 0
 app_global_put
-main_l33:
+main_l35:
 gtxn 2 XferAsset
 byte "SharesAssetId"
 app_global_get
@@ -803,7 +828,7 @@ itxn_field Fee
 itxn_submit
 int 1
 return
-main_l34:
+main_l36:
 byte "ImageUrl"
 gtxna 1 ApplicationArgs 15
 app_global_put
@@ -832,8 +857,8 @@ itxn_submit
 byte "ImageAsset"
 itxn CreatedAssetID
 app_global_put
-b main_l33
-main_l35:
+b main_l35
+main_l37:
 gtxn 0 TypeEnum
 int axfer
 ==

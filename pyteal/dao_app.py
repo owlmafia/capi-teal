@@ -406,6 +406,18 @@ def approval_program():
         Approve()
     )
 
+    handle_team = Seq(
+        is_group_size(1),
+        is_args_length(Gtxn[0], 2),
+
+        # only the owner set team
+        Assert(Gtxn[0].sender() == Global.creator_address()),
+
+        set_gs(GLOBAL_TEAM_URL, Gtxn[0].application_args[1]),
+
+        Approve()
+    )
+
     # allow the investors to get their investments back if the funding target wasn't met
     #
     # note that for reclaim, we expect the user to have unlocked the shares
@@ -472,6 +484,7 @@ def approval_program():
         [Gtxn[0].application_args[0] == Bytes("update_data"), handle_update_data_basic],
         [Gtxn[0].application_args[0] == Bytes("withdraw"), handle_withdrawal],
         [Gtxn[0].application_args[0] == Bytes("dev_settings"), handle_dev_settings],
+        [Gtxn[0].application_args[0] == Bytes("team"), handle_team],
     )
 
     # program = Approve()
