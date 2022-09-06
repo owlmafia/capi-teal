@@ -119,6 +119,10 @@ def approval_program():
             get_ls(Gtxn[0].sender(), LOCAL_SHARES)
         ),
 
+
+        # note: latest_timestamp doesn't work on dev mode! (e.g. currently is returning a date 5 days ago)
+        # Log(Itob(Global.latest_timestamp())),
+        
         # Don't allow to unlock until fund raising period ended.
         # We need this to be able to set a max limit to shares that can be bought
         # (that is, during the funds raising period, 
