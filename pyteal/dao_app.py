@@ -483,7 +483,7 @@ def approval_program():
         [Gtxn[0].application_args[0] == Bytes("drain"), handle_drain],
         [Gtxn[0].application_args[0] == Bytes("update_data"), handle_update_data_basic],
         [Gtxn[0].application_args[0] == Bytes("withdraw"), handle_withdrawal],
-        [Gtxn[0].application_args[0] == Bytes("dev_settings"), handle_dev_settings],
+        # [Gtxn[0].application_args[0] == Bytes("dev_settings"), handle_dev_settings],
         [Gtxn[0].application_args[0] == Bytes("team"), handle_team],
     )
 
